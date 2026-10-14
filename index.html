@@ -90,7 +90,7 @@ tr.rw:hover{background:var(--accent-soft)}
 .note,.notice,.insight{border-radius:12px}
 .tabs button.on{box-shadow:0 4px 12px rgba(11,127,134,.25)}
 
-#lerr.ok{color:var(--ok)!important}
+#lerr.ok{color:var(--ok)!important}#lerr{white-space:pre-line;overflow-wrap:anywhere}
 #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:40;padding:16px;overflow:auto}
 .lbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:22px;width:100%;max-width:400px}
 img,svg{max-width:100%}
@@ -126,7 +126,7 @@ img,svg{max-width:100%}
 <div id="login" hidden><div class="lbox"><h1>🎓 TCAS Tracker</h1><p class="sub" style="margin:0 0 14px">เข้าสู่ระบบด้วยรหัสผู้ใช้ (Main user หรือ Sub user)</p>
 <div id="urlbox" class="f" style="margin-bottom:10px"><label class="l" for="apiurl">Web app URL (ตั้งครั้งเดียว)</label><input id="apiurl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div>
 <div class="f"><label class="l" for="code">รหัสผู้ใช้</label><input id="code" type="password" autocomplete="current-password" placeholder="รหัสที่ได้รับ"></div>
-<button class="primary" id="doLogin" style="width:100%;margin-top:14px">เข้าสู่ระบบ</button><button id="doTest" style="width:100%;margin-top:8px">🔍 ทดสอบการเชื่อมต่อ</button><p id="lerr" class="src" style="margin:10px 0 0;color:var(--bad)"></p></div></div>
+<button class="primary" id="doLogin" style="width:100%;margin-top:14px">เข้าสู่ระบบ</button><button id="doTest" style="width:100%;margin-top:8px">🔍 ทดสอบการเชื่อมต่อ</button><p id="lerr" class="src" style="margin:10px 0 0;color:var(--bad)"></p><div id="ver" class="src" style="margin:12px 0 0;text-align:center"></div><div style="text-align:center;margin-top:4px"><button class="lnk" id="urlchg" hidden>เปลี่ยน Web app URL</button></div></div></div>
 <div id="msg" class="mode"></div><div id="toast" role="status"></div><div id="dlg" hidden></div><div id="upd" hidden></div>
 <div id="who"></div>
 <div id="home"></div>
@@ -136,8 +136,9 @@ img,svg{max-width:100%}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="config.js"></script>
 <script>
-const APP_VERSION="2026-10-12.2";   // เปลี่ยนเลขนี้ทุกครั้งที่แก้ไฟล์ เพื่อให้เครื่องอื่นรู้ว่ามีเวอร์ชันใหม่
+const APP_VERSION="2026-10-13.2";   // เปลี่ยนเลขนี้ทุกครั้งที่แก้ไฟล์ เพื่อให้เครื่องอื่นรู้ว่ามีเวอร์ชันใหม่
 const TR=["ติวเข้ม","UpSkill"];
 const C=[
 ["คณิต",0,"8303","Applied Math Admission TCAS เล่ม 1",45],["คณิต",0,"8304","Applied Math Admission TCAS เล่ม 2",40],["คณิต",0,"8305","Applied Math Admission TCAS เล่ม 3",32],["คณิต",0,"8306","Applied Math Admission TCAS เล่ม 4",40],["คณิต",0,"8307","Applied Math Admission TCAS เล่ม 5",36],["คณิต",1,"8309","UpSkill คณิตศาสตร์ประยุกต์",54],
@@ -305,7 +306,7 @@ function staffTable(){const T=staffStats(),can=MAXSUB===0||USERS.length<MAXSUB;
   const form=`<div class="row f" style="align-items:flex-end;margin:0 0 8px"><div style="flex:1;min-width:200px"><label class="l" for="newsub">ชื่อ Sub user ใหม่</label><input id="newsub" maxlength="40" placeholder="เช่น พี่เอ"></div><button class="primary" id="addsub"${can?"":" disabled"}>➕ เพิ่ม Sub user</button></div><p class="src" style="margin:0 0 12px">เฉพาะ Main user เท่านั้นที่เพิ่ม Sub user ได้ · ${MAXSUB?"เพิ่มได้สูงสุด "+MAXSUB+" คน (ตอนนี้มี "+USERS.length+")":"เมื่อเพิ่มแล้วระบบจะแสดงรหัสเข้าใช้ 1 ครั้ง ให้ส่งรหัสนั้นให้พนักงาน"}</p>`;
   return form+`<table style="min-width:940px"><thead><tr><th>ผู้ดูแล</th><th>ใช้งานล่าสุด</th><th>นักเรียน</th><th>ล่าช้า</th><th>ตามแผน/ล้ำหน้า</th><th>ยังไม่ตั้งแผน</th><th>เฉพาะ ม.ปลาย</th><th>เรียนแล้วเฉลี่ย</th><th>จัดการ</th></tr></thead><tbody>`+
   T.map(t=>{const u=USERS.find(x=>x.id===t.id);return`<tr class="rw"><td><b>${esc(t.name)}</b></td><td>${fd(t.seen)}</td><td>${t.n}</td><td class="${t.beh?"dng":""}">${t.beh}</td><td>${t.ok}</td><td>${t.np}</td><td>${t.hs}</td><td>${t.pct}%</td><td><div class="row" style="margin:0"><button class="sm" data-sf="${esc(t.id||"-")}">ดูนักเรียน</button>${u?`<button class="sm" data-nu="${u.id}">เปลี่ยนชื่อ</button><button class="sm" data-ru="${u.id}">รีเซ็ตรหัส</button><button class="sm" data-tu="${u.id}">${u.active?"ปิดใช้งาน":"เปิดใช้งาน"}</button>`:""}</div></td></tr>`}).join("")+`</tbody></table>`}
-function whoHtml(){if(!ME.id)return"";return`<div class="who">คุณคือ <b>${esc(ME.name)}</b> (${ME.owner?"Main user":"Sub user"}) · <button class="lnk" id="refresh">🔄 รีเฟรชข้อมูล</button> · <button class="lnk" id="logout">ออกจากระบบ</button> · <span class="src">v${APP_VERSION}</span></div>`}
+function whoHtml(){if(!ME.id)return"";return`<div class="who">คุณคือ <b>${esc(ME.name)}</b> (${ME.owner?"Main user":"Sub user"}) · <button class="lnk" id="refresh">🔄 รีเฟรชข้อมูล</button> · <button class="lnk" id="logout">ออกจากระบบ</button>${ME.owner?' · <button class="lnk" id="shareLink">🔗 ลิงก์สำหรับพนักงาน</button>':""} · <span class="src">v${APP_VERSION}</span></div>`}
 function staffField(st){if(mode!=="shared")return"";
   if(ME.owner){const o=[...STAFF.map(x=>[x.id,x.name]),...(st.staffId&&!STAFF.some(x=>x.id===st.staffId)?[[st.staffId,st.staffName||"(ไม่ทราบชื่อ)"]]:[])];
     return`<div><label class="l" for="f_staffId">พนักงานผู้ดูแล</label><select id="f_staffId" data-f="staffId">${o.map(x=>`<option value="${esc(x[0])}"${x[0]===(st.staffId||"")?" selected":""}>${esc(x[1])}</option>`).join("")}</select></div>`}
@@ -332,7 +333,9 @@ function loadLocal(){try{S=(JSON.parse(localStorage.getItem(LS))||[]).map(norm)}
 /* ===== เชื่อมต่อ Google Apps Script (ฟรี) ===== */
 const API_URL="";   // วาง Web app URL (ลงท้าย /exec) ตรงนี้ หรือกรอกในหน้าเข้าสู่ระบบครั้งแรกก็ได้
 let TOKEN="",USERS=[],MAXSUB=0,SINCE=0,PEND={},pollT=null,tick=0;
-const apiUrl=()=>{if(API_URL)return API_URL;try{return localStorage.getItem("tcas-api")||""}catch(e){return""}};
+const cfgUrl=()=>{try{return window.TCAS_API_URL?String(window.TCAS_API_URL).trim():""}catch(e){return""}};
+const fixedUrl=()=>API_URL||cfgUrl();
+const apiUrl=()=>{if(fixedUrl())return fixedUrl();try{return localStorage.getItem("tcas-api")||""}catch(e){return""}};
 async function api(a,p){const url=apiUrl();if(!url)throw new Error("no api url");
   let r;try{r=await fetch(url,{method:"POST",redirect:"follow",body:JSON.stringify(Object.assign({a,t:TOKEN},p||{}))})}catch(e){throw new Error("network")}
   let j;try{j=await r.json()}catch(e){throw new Error("bad response")}
@@ -340,21 +343,27 @@ async function api(a,p){const url=apiUrl();if(!url)throw new Error("no api url")
 const AUTHERR=/unauthorized|expired|disabled/;
 function errTxt(e){const m=String(e&&e.message||e);return m==="invalid"?"รหัสไม่ถูกต้อง":m==="locked"?"ลองผิดหลายครั้ง ระบบล็อกชั่วคราว รอ 10 นาที":m==="network"?"เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กดปุ่ม ทดสอบการเชื่อมต่อ ด้านล่างเพื่อตรวจ และดูคู่มือหัวข้อ แก้ปัญหา":m==="forbidden"?"ไม่มีสิทธิ์ทำรายการนี้":m==="limit"?"เพิ่ม Sub user ครบจำนวนที่กำหนดแล้ว":m}
 function fail(e,msg){if(AUTHERR.test(String(e&&e.message)))return logout("เซสชันหมดอายุ หรือบัญชีถูกปิดใช้งาน กรุณาเข้าสู่ระบบใหม่");toast((msg?msg+": ":"")+errTxt(e))}
-function showLogin(msg){$("login").hidden=false;$("lerr").textContent=msg||"";$("urlbox").hidden=!!API_URL;try{if(!$("apiurl").value)$("apiurl").value=apiUrl()}catch(e){}}
+function showLogin(msg){$("login").hidden=false;try{$("ver").textContent="เวอร์ชัน v"+APP_VERSION}catch(e){}$("lerr").textContent=msg||"";$("urlbox").hidden=!!apiUrl();try{$("urlchg").hidden=!(apiUrl()&&!fixedUrl())}catch(e){}try{if(!$("apiurl").value)$("apiurl").value=apiUrl()}catch(e){}}
 function hideLogin(){$("login").hidden=true}
-async function testConn(){const e=$("lerr");let u=API_URL||($("apiurl").value||"").trim();
-  if(!u){e.className="src";e.textContent="ใส่ Web app URL ก่อน";return}
-  e.className="src";e.textContent="กำลังทดสอบ…";
-  try{const r=await fetch(u,{redirect:"follow"});const t=await r.text();
+const cleanUrl=x=>{const m=String(x||"").match(/https:\/\/script\.google\.com\/[^\s"'<>]+?\/exec/);return m?m[0]:""};
+async function probe(x){try{await fetch(x,{mode:"no-cors"});return"✅"}catch(e){return"❌"}}
+async function testConn(){const e=$("lerr");e.className="src";
+  const u=fixedUrl()||cleanUrl($("apiurl").value);
+  if(!u){e.textContent="Web app URL ไม่ถูกต้อง ต้องขึ้นต้น https://script.google.com/ และลงท้าย /exec (คัดลอกจากหน้า Deploy ใน Apps Script)";return}
+  try{if(!fixedUrl())$("apiurl").value=u}catch(x){}
+  e.textContent="กำลังทดสอบ…";
+  try{const r=await fetch(u,{redirect:"follow"}),t=await r.text();
     if(/"service"\s*:\s*"tcas-tracker"/.test(t)){e.className="src ok";e.textContent="✅ เชื่อมต่อระบบหลังบ้านได้แล้ว ใส่รหัสผู้ใช้แล้วกดเข้าสู่ระบบได้เลย";return}
     e.textContent="❌ ติดต่อ Google ได้ แต่ไม่ใช่ระบบหลังบ้านของเรา ตรวจว่าคัดลอก URL ที่ลงท้าย /exec ถูกต้อง และตั้ง 'ผู้มีสิทธิ์เข้าถึง' เป็น 'ทุกคน (Anyone)'"}
-  catch(err){let reach=false;try{await fetch(u,{mode:"no-cors",redirect:"follow"});reach=true}catch(e2){}
-    e.textContent=reach?"❌ ติดต่อ Google ได้ แต่ Google ไม่ให้หน้าเว็บอ่านคำตอบ แปลว่าสิทธิ์เข้าถึงยังไม่ใช่ 'ทุกคน (Anyone)' หรือยังไม่ได้ Deploy เวอร์ชันใหม่ (บัญชีองค์กรมักถูกจำกัดสิทธิ์ ลองใช้ Gmail ส่วนตัว) ดูคู่มือส่วน F ข้อ 1":"❌ หน้านี้ส่งคำขอออกไปหา Google ไม่ได้เลย สาเหตุที่พบบ่อย: เปิดไฟล์จากหน้าพรีวิวในแอป/แชท (ให้ดาวน์โหลดไฟล์แล้วดับเบิลคลิกเปิดจากเครื่อง หรือเปิดจากลิงก์ GitHub Pages), โปรแกรมบล็อกโฆษณา/VPN หรือเครือข่ายบล็อก script.google.com"}}
+  catch(err){e.textContent="กำลังตรวจเครือข่ายของเครื่องนี้…";
+    const reach=await probe(u),g=await probe("https://www.google.com/generate_204"),sg=await probe("https://script.google.com/"),gc=await probe("https://script.googleusercontent.com/");
+    const net="ผลตรวจเครือข่ายของเครื่องนี้:\ngoogle.com "+g+"   script.google.com "+sg+"   script.googleusercontent.com "+gc+"   URL ของคุณ "+reach;
+    e.textContent=(reach==="✅"?"❌ ติดต่อ Google ได้ แต่ Google ไม่ให้หน้าเว็บอ่านคำตอบ แปลว่าสิทธิ์เข้าถึงยังไม่ใช่ 'ทุกคน (Anyone)' หรือยังไม่ได้ Deploy เวอร์ชันใหม่ (บัญชีองค์กรมักถูกจำกัดสิทธิ์ ลองใช้ Gmail ส่วนตัว) ดูคู่มือส่วน F ข้อ 1":"❌ หน้านี้ส่งคำขอออกไปหา Google ไม่ได้ สาเหตุที่พบบ่อย: ส่วนขยายบล็อกโฆษณา/ความเป็นส่วนตัวในเบราว์เซอร์, VPN หรือเครือข่ายบริษัทบล็อก ลองเปิดหน้านี้ในหน้าต่าง Incognito (Ctrl+Shift+N) หรือสลับเป็นเน็ตมือถือ")+"\n"+net}}
 async function doLogin(){const code=($("code").value||"").trim();
-  if(!API_URL){const u=($("apiurl").value||"").trim();if(!/^https:\/\/script\.google\.com\/.+\/exec/.test(u)){$("lerr").textContent="Web app URL ไม่ถูกต้อง (ต้องขึ้นต้น https://script.google.com และลงท้าย /exec)";return}try{localStorage.setItem("tcas-api",u)}catch(e){}}
+  if(!fixedUrl()){const u=cleanUrl($("apiurl").value);if(!u){$("lerr").className="src";$("lerr").textContent="Web app URL ไม่ถูกต้อง ต้องขึ้นต้น https://script.google.com/ และลงท้าย /exec (คัดลอกจากหน้า Deploy ใน Apps Script)";return}try{$("apiurl").value=u;localStorage.setItem("tcas-api",u)}catch(e){}}
   if(!code){$("lerr").textContent="กรอกรหัสผู้ใช้";return}
   $("lerr").className="src";$("lerr").textContent="กำลังเข้าสู่ระบบ…";
-  try{const r=await api("login",{code});TOKEN=r.token;try{localStorage.setItem("tcas-token",TOKEN)}catch(e){}$("code").value="";await enter(r.me)}catch(e){$("lerr").textContent=errTxt(e)}}
+  try{const r=await api("login",{code});TOKEN=r.token;try{localStorage.setItem("tcas-token",TOKEN)}catch(e){}$("code").value="";await enter(r.me)}catch(e){$("lerr").textContent=errTxt(e);if(String(e&&e.message)==="network"&&!fixedUrl()){$("urlbox").hidden=false;try{$("urlchg").hidden=true}catch(x){}}}}
 function logout(msg){TOKEN="";try{localStorage.removeItem("tcas-token")}catch(e){}clearInterval(pollT);S=[];USERS=[];STAFF=[];cur=null;SINCE=0;PEND={};ME={id:"",owner:false,reg:false,name:"",joined:""};render();showLogin(msg||"")}
 async function enter(m){ME={id:m.id,owner:m.role==="main",reg:true,name:m.name,joined:""};mode="shared";hv=ME.owner?"all":"mine";sf="";
   STAFF=[{id:ME.id,name:ME.name,joined:"",seen:""}];S=[];SINCE=0;PEND={};hideLogin();toast("กำลังโหลดข้อมูล…");
@@ -367,8 +376,16 @@ async function pull(full){const r=await api("list",{since:full?0:SINCE});SINCE=M
   const ids=new Set(r.ids),b=S.length;S=S.filter(o=>ids.has(o.id)||PEND[o.id]>0);if(S.length!==b)ch=true;return ch}
 async function poll(){if(!TOKEN||typing||document.visibilityState==="hidden")return;const ae=document.activeElement;if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))return;
   try{let ch=await pull(false);tick++;if(ME.owner&&tick%4===0){await loadUsers();ch=true}if(ch)render()}catch(e){fail(e)}}
+function applyHash(){try{if(typeof location==="undefined"||fixedUrl())return;const m=String(location.hash||"").match(/[#&]u=([^&]+)/);if(!m)return;
+  const u=cleanUrl(decodeURIComponent(m[1]));if(u){localStorage.setItem("tcas-api",u);if(typeof history!=="undefined"&&history.replaceState)history.replaceState(null,"",location.pathname+location.search)}}catch(e){}}
+function showCopy(title,text,note){const d=$("dlg");d.innerHTML=`<div class="dbox" role="dialog" aria-modal="true"><p style="margin:0 0 8px"><b>${esc(title)}</b></p><div style="font-size:.85rem;padding:10px;background:var(--accent-soft);border-radius:12px;user-select:all;word-break:break-all">${esc(text)}</div><p class="src" style="margin:10px 0">${esc(note||"")}</p><div class="row" style="justify-content:flex-end"><button id="dcopy">คัดลอก</button><button class="primary" id="dy">ปิด</button></div></div>`;d.hidden=false;
+  $("dy").onclick=()=>{d.hidden=true;d.innerHTML=""};$("dcopy").onclick=()=>{try{navigator.clipboard.writeText(text).then(()=>toast("คัดลอกแล้ว"),()=>toast("คัดลอกไม่ได้ ให้กดค้างที่ข้อความแล้วเลือกคัดลอก"))}catch(e){toast("คัดลอกไม่ได้ ให้กดค้างที่ข้อความแล้วเลือกคัดลอก")}}}
+function shareLink(){if(typeof location==="undefined"||!/^https?:$/.test(location.protocol)){toast("ต้องเปิดจากลิงก์เว็บ (GitHub Pages) จึงจะสร้างลิงก์ได้");return}
+  const base=location.origin+location.pathname,u=apiUrl(),fixed=!!fixedUrl(),link=(fixed||!u)?base:base+"#u="+encodeURIComponent(u);
+  showCopy("ลิงก์สำหรับพนักงาน",link,fixed?"ลิงก์นี้ไม่ต้องกรอก Web app URL อีก ให้พนักงานใส่รหัสของตัวเองได้เลย":"ลิงก์นี้มี Web app URL ติดไปด้วย พนักงานเปิดครั้งแรกแล้วใส่รหัสของตัวเองได้เลย ไม่ต้องกรอก URL (Web app URL ไม่ใช่ความลับ เพราะต้องมีรหัสถึงจะเข้าได้) ส่งลิงก์ต่อให้พนักงานคนไหนก็ได้ แต่ส่งรหัสแยกรายคน")}
 async function init(){mode="shared";ME={id:"",owner:false,reg:false,name:"",joined:""};
   try{TOKEN=localStorage.getItem("tcas-token")||""}catch(e){TOKEN=""}
+  applyHash();
   render();
   if(!apiUrl()){showLogin("ตั้งค่า Web app URL แล้วเข้าสู่ระบบ");return}
   if(!TOKEN){showLogin();return}
@@ -664,6 +681,8 @@ document.addEventListener("click",e=>{const el=e.target.closest("button");if(!el
   if(el.dataset.open){cur=el.dataset.open;const x=S.find(o=>o.id===cur);tab=x&&!agg(x,null,null).n&&hsSum(x).n?"hs":"comp";lastId=null;render();window.scrollTo(0,0)}
   else if(el.id==="doLogin")doLogin()
   else if(el.id==="doTest")testConn()
+  else if(el.id==="urlchg"){$("urlbox").hidden=false;$("urlchg").hidden=true}
+  else if(el.id==="shareLink")shareLink()
   else if(el.id==="logout")logout()
   else if(el.id==="refresh"){pull(false).then(()=>{render();toast("อัปเดตข้อมูลแล้ว")}).catch(e=>fail(e))}
   else if(el.id==="addsub"){const n=($("newsub").value||"").trim();if(!n){toast("ใส่ชื่อ Sub user ก่อน");return}
