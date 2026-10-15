@@ -147,7 +147,7 @@ img,svg{max-width:100%}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="config.js"></script>
 <script>
-const APP_VERSION="2026-10-15.2";
+const APP_VERSION="2026-10-15.3";
 const TR=["ติวเข้ม","UpSkill"];
 const C=[
 ["คณิต",0,"8303","Applied Math Admission TCAS เล่ม 1",45],["คณิต",0,"8304","Applied Math Admission TCAS เล่ม 2",40],["คณิต",0,"8305","Applied Math Admission TCAS เล่ม 3",32],["คณิต",0,"8306","Applied Math Admission TCAS เล่ม 4",40],["คณิต",0,"8307","Applied Math Admission TCAS เล่ม 5",36],["คณิต",1,"8309","UpSkill คณิตศาสตร์ประยุกต์",54],
@@ -165,7 +165,7 @@ const fd=s=>s?D0(s).toLocaleDateString("th-TH",{day:"numeric",month:"short",year
 const LS="tcas-students-v1";
 const BATCHES=Array.from({length:11},(_,i)=>"DEK"+(71+i));
 let tab="comp",hv="all",sf="",editName=false,seenSet=false,STAFF=[],ME={id:"",owner:true,reg:true,name:"",joined:""},lastId=null,S=[],cur=null,db=null,readOnly=false,typing=false,q="",mode="local";
-const nm=s=>[s.first,s.last].filter(Boolean).join(" ")+(s.nick?` (\${s.nick})`:"");
+const nm=s=>[s.first,s.last].filter(Boolean).join(" ")+(s.nick?` (${s.nick})`:"");
 
 function blank(){const subj={};SUBJ.forEach(s=>subj[s]={on:false,t:[1,1],enr:TODAY,start:TODAY,end:"",ustart:"",uend:""});
   return{id:"s"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),first:"",last:"",nick:"",ondy:"",photo:"",phone:"",school:"",uni:"",faculty:"",batch:"DEK71",note:"",price:"",subj,w:{},wk:{},wp:{},hp:{},hw:{},hwk:{},hwp:{},cn:{},staffId:"",staffName:""}}
@@ -232,6 +232,76 @@ function needsAlert(st) {
   if (d && d.d <= 7) return true;
   return false;
 }
+
+function packCard(st,p){const x=hpInfo(st,p),r=(st.hp||{})[p.k]||{};
+  const head=`<div class="cdh"><label style="cursor:pointer"><input type="checkbox" data-hp="${p.k}" data-k="on"${x?" checked":""}> <b>${esc(p.n)}</b></label>${p.term?`<span class="chip wait">${p.term}</span>`:""}</div><div class="src">รหัส ${p.k} · ${fh(p.h)} ชม. · อายุคอร์ส ${p.mo} เดือน</div>`;
+  if(!x)return`<div class="cd">${head}</div>`;
+  const cls=x.fin?"":x.days==null?"":x.days<0?" late":x.days<=30?" warn":"",tp=x.f==null?0:Math.round(x.f*100),hp=Math.round(x.done/x.total*100);
+  const dTxt=x.fin?"ครบแล้ว":x.days==null?"–":x.days<0?`เลย ${-x.days} วัน`:`${x.days} <small>วัน</small>`;
+  const pace=x.fin?"เรียนครบทุกเรื่องในแพ็คแล้ว":x.days==null?"ใส่วันที่สมัครเพื่อเริ่มนับถอยหลัง":x.days<=0?`หมดอายุแล้ว ยังเหลือ ${fh(x.rem)} ชม.`:`ต้องเรียนเฉลี่ย ${fh(x.rem/(x.days/7))} ชม./สัปดาห์ (${fh(x.rem/x.days)} ชม./วัน)`;
+  return`<div class="cd${cls}">${head}
+  <div class="f" style="display:flex;gap:8px;margin-top:8px"><div style="flex:1"><label class="l" for="e${p.k}">วันที่สมัคร</label><input id="e${p.k}" type="date" data-hp="${p.k}" data-k="enr" value="${esc(r.enr||"")}"></div><div style="width:96px"><label class="l" for="m${p.k}">อายุ (เดือน)</label><input id="m${p.k}" type="number" min="1" max="36" data-hp="${p.k}" data-k="mo" value="${r.mo||""}" placeholder="${p.mo}"></div></div>
+  <div class="f" style="display:flex;gap:8px;margin-top:6px"><div style="flex:1"><label class="l" for="s${p.k}">เริ่มเรียนตามแผน</label><input id="s${p.k}" type="date" data-hp="${p.k}" data-k="ps" value="${esc(r.ps||"")}"></div><div style="flex:1"><label class="l" for="d${p.k}">ต้องจบตามแผน</label><input id="d${p.k}" type="date" data-hp="${p.k}" data-k="pe" value="${esc(r.pe||"")}"></div></div>
+  <div class="src">เว้นว่าง = เริ่มวันที่สมัคร และจบวันหมดอายุคอร์ส</div>
+  <div class="cdr"><span>เหลือเวลา</span><b${x.days!=null&&x.days<0&&!x.fin?' class="dng"':""}>${dTxt}</b></div>
+  <div class="bar"><i style="width:${tp}%;background:var(--plan)"></i></div><div class="src">ใช้เวลาไปแล้ว ${x.f==null?"–":tp+"%"} · หมดอายุ ${fd(x.exp)}</div>
+  <div class="cdr"><span>เหลือชั่วโมง</span><b>${fh(x.rem)} <small>ชม.</small></b></div>
+  <div class="bar"><i style="width:${hp}%"></i></div><div class="src">เรียนแล้ว ${hp}% · ${fh(x.done)}/${fh(x.total)} ชม.</div>
+  <div class="src" style="margin-top:6px"><b>${pace}</b></div>
+  <div class="src">แผน ณ วันนี้ ${fh(x.plan)} ชม. · ${x.fin?'<span class="chip ok">ครบแล้ว</span>':chip(x)}</div>
+  <details data-s="p${p.k}" style="margin-top:8px"><summary style="padding:6px 8px;font-size:.9rem"><span>รายการเรียน (${p.it.length})</span><small>${fh(x.done)}/${fh(x.total)} ชม.</small></summary><div class="tk">`+
+  p.it.map(i=>{const w=Math.min(i.h,(st.hw||{})[i.c]||0),d=w>=i.h;return`<div class="item\${d?" done":""}"><input type="checkbox" id="h\${i.c}" data-hc="${i.c}"${d?" checked":""}><label for="h\${i.c}">${i.c}${esc(i.n)}</label><span class="m"><input class="w" type="number" min="0" max="\${i.h}" step="0.5" value="${fh(w)}" data-hv="${i.c}" aria-label="ชั่วโมงที่เรียนแล้ว ${esc(i.n)}"> / ${fh(i.h)} ชม.</span></div>`}).join("")+`</div></details></div>`}
+
+function hsChart(st){const el=$("hc0");if(!el)return;const S2=hsubs(st);if(!S2.length){el.innerHTML="";return}
+  const A=S2.map(s=>hsAgg(st,s)),mx=Math.max(1,...A.map(a=>Math.max(a.plan,a.done,a.total)))*1.1;
+  const W=Math.max(430,S2.length*104+40),H=240,Lf=38,B=44,T=12,ph=H-B-T,gw=(W-Lf)/S2.length,bw=Math.min(28,gw/3);
+  let o=`<svg viewBox="0 0 ${W}${H}" width="${W}" height="${H}" role="img" aria-label="กราฟแท่งเนื้อหา ม.ปลาย แผนเทียบเรียนจริงรายวิชา">`;
+  for(let i=0;i<=4;i++){const y=T+ph-ph*i/4;o+=`<line x1="${Lf}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="\${Lf-5}" y="${y+4}" font-size="11" text-anchor="end">${Math.round(mx*i/4)}</text>`}
+  S2.forEach((s,i)=>{const x=Lf+i*gw+gw/2;
+    [[A[i].plan,"var(--plan)",-bw-2],[A[i].done,"var(--accent)",2]].forEach(([v,c,dx])=>{const h=ph*v/mx;o+=`<rect x="\${x+dx}" y="${T+ph-h}" width="${bw}" height="${h}" rx="3" fill="${c}"/><text x="\${x+dx+bw/2}" y="${T+ph-h-4}" font-size="11" text-anchor="middle">${fh(v)}</text>`});
+    o+=`<text x="\${x}" y="${H-24}" font-size="12" text-anchor="middle">${s}</text><text x="\${x}" y="${H-9}" font-size="10" text-anchor="middle">ทั้งหมด ${fh(A[i].total)} ชม.</text>`});
+  el.innerHTML=o+"</svg>"}
+
+function hsWeeklyHtml(st){
+  const L=hweeks(st),E=hsubs(st),cw=mon(TODAY);if(!L.length||!E.length)return"";
+  let sum=0;L.forEach(w=>sum+=hwtot(st,w).a);
+  const ov=(w,s)=>((st.hwp||{})[w]||{})[s],inp=(id,att,v,ph,lab,extra="")=>`<input class="w" style="width:62px;${extra}" type="number" min="0" max="168" step="0.5" id="${id}" ${att} value="${v}" placeholder="${ph}" aria-label="${lab}">`;
+  return`<section class="panel"><h2>📅 ชั่วโมงเรียนรายสัปดาห์ (ม.ปลาย): แผน vs เรียนจริง</h2>
+  <p class="sub" style="margin:-4px 0 8px">ช่อง "แผน" กำหนดชั่วโมงที่ต้องเรียนในสัปดาห์นั้น เว้นว่างไว้จะใช้ค่าเฉลี่ยอัตโนมัติ (ตัวเลขจางในช่อง) จากวันเริ่ม–วันจบตามแผนของแต่ละแพ็ค ส่วนช่อง "จริง" กรอกเมื่อน้องเรียนแล้ว (สัปดาห์จันทร์–อาทิตย์)</p>
+  <div class="scroll" id="hcw"></div>
+  <div class="row f" style="align-items:flex-end;margin:10px 0"><div style="width:150px"><label class="l" for="hbs">ตั้งแผนทุกสัปดาห์ของวิชา</label><select id="hbs">\${E.map(x=>`<option>${x}</option>`).join("")}</select></div>
+  <div style="width:130px"><label class="l" for="hbh">ชั่วโมง/สัปดาห์</label><input id="hbh" type="number" min="0" max="168" step="0.5"></div>
+  <button id="hbfill" class="act">ใช้กับทุกสัปดาห์ในช่วงเรียน</button><button id="hbclr" class="act">กลับเป็นค่าเฉลี่ยอัตโนมัติ</button></div>
+  <div class="wkbox" id="hcwb"><table style="min-width:${300+E.length*150}px"><thead><tr><th>สัปดาห์</th>${E.map(x=>`<th>${x}<br><small>แผน / จริง (ชม.)</small></th>`).join("")}<th>รวมจริง</th><th>รวมแผน</th><th>สถานะ</th></tr></thead><tbody>`+
+  L.map(w=>{const t=hwtot(st,w),isC=w===cw,fut=w>cw;
+    return`<tr\${isC?' id="hcwrow"':""}><td style="white-space:nowrap">\${fd(w)} – ${fd(addDays(w,6))}${isC?' <span class="chip wait">สัปดาห์นี้</span>':""}</td>`+
+    E.map((x,i)=>{const o=ov(w,x);return`<td><div style="display:flex;gap:4px">\${inp(`qp_${w}_${i}`,`data-hwp="${w}" data-ws="${x}"`,o===undefined?"":o,fh(hwauto(st,x,w)),`แผน ${x} สัปดาห์ ${fd(w)}`,o===undefined?"":"border-color:var(--accent)")}\${inp(`qa_${w}_${i}`,`data-hwk="${w}" data-ws="${x}"${fut?" disabled":""}`,hwact(st,x,w)||"","0",`จริง ${x} สัปดาห์ ${fd(w)}`)}</div></td>`}).join("")+
+    `<td><b>\${fh(t.a)}</b></td><td>${fh(t.p)}</td><td>${fut?"–":wchip(t.a,t.p,isC)}</td></tr>`}).join("")+
+  `</tbody></table></div><p class="src" style="margin:8px 0 0">รวมจากบันทึกรายสัปดาห์ \${fh(sum)} ชม. (ชุดนี้กรอกแยกจากการติ๊กรายการเรียนในแพ็ค) · กรอบสีฟ้าในช่องแผน = ผู้ดูแลกำหนดเอง</p></section>`}
+
+function hsHtml(st){
+  const L=hsAll(st),a=hsAgg(st),pc=a.total?Math.round(a.done/a.total*100):0,g=a.done-a.plan,cw=mon(TODAY),tw=hwtot(st,cw);
+  const near=L.filter(x=>!x.fin&&x.days!=null).sort((x,y)=>x.days-y.days)[0];
+  let need=0,over=0;L.forEach(x=>{if(x.fin||!x.pe)return;const w=(D0(x.pe)-D0(TODAY))/6048e5;if(w>0)need+=x.rem/w;else over++});
+  const needT=a.n&&a.total-a.done<.05?"เรียนครบแล้ว":over?`เลยกำหนด \${over} แพ็ค`:need?fh(need)+" ชม./สัปดาห์":"–";
+  const stats=`<div class="stats"><div class="stat hero"><b>\${fh(a.done)}/${fh(a.total)} ชม.</b><span>เรียนแล้ว ${pc}% จาก ${L.length} แพ็คที่สมัคร (ทั้งหมด ${HP.length} แพ็ค)</span><div class="bar"><i style="width:\${pc}%"></i></div></div>
+  <div class="stat"><b>\${fh(a.plan)} ชม.</b><span>ควรเรียนให้ได้ตามแผน ณ วันนี้</span></div>
+  <div class="stat"><b style="color:var(--\${g>=-.05?"ok":"bad"})">${a.np\vert{}\vert{}!a.n?"–":(g>=0?"+":"−")+fh(Math.abs(g))+" ชม."}</b><span>${!a.n?"ยังไม่ได้เลือกแพ็ค":a.np?"ตั้งวันที่ให้ครบทุกแพ็ค":g>=-.05?"ตามแผนหรือล้ำหน้า":"ล่าช้ากว่าแผน"}</span></div>
+  <div class="stat"><b style="font-size:1.3rem">\${needT}</b><span>ที่ต้องเรียนเฉลี่ย เพื่อให้จบตามแผนของแต่ละแพ็ค</span></div>
+  <div class="stat"><b>${fh(tw.a)}/${fh(tw.p)} ชม.</b><span>สัปดาห์นี้ (${fd(cw)} –${fd(addDays(cw,6))}) เรียนจริง / ตามแผน</span></div>
+  <div class="stat"><b class="\${near&&near.days<0?"dng":""}">${near?(near.days<0?"เลย "+(-near.days):near.days)+" วัน":"–"}</b><span>${near?"หมดอายุใกล้สุด: "+esc(near.p.s)+(near.p.term?" "+esc(near.p.term):"")+" ("+fd(near.exp)+")":"ยังไม่มีแพ็คที่ต้องนับถอยหลัง"}</span></div></div>`;
+  const dash=L.length?`<section class="panel"><h2>📊 แผน vs เรียนจริง รายวิชา (ชม.)</h2><div class="scroll" id="hc0"></div><div class="legend"><span><i style="background:var(--plan)"></i>ตามแผน (ถึงวันนี้)</span><span><i style="background:var(--accent)"></i>เรียนจริง</span></div></section>
+  <section class="panel"><h2>📝 สรุปรายแพ็ค</h2><div class="scroll"><table><thead><tr><th>แพ็ค</th><th>แผน / จริง / ทั้งหมด (ชม.)</th><th>สถานะ</th><th>ต้องจบตามแผนอีก</th><th>หมดอายุอีก</th></tr></thead><tbody>`+
+    L.map(x=>`<tr><td>\${SE[x.p.s]||""} ${esc(x.p.s)}${x.p.term?" · "+esc(x.p.term):""}<div class="src">${esc(x.p.n)}</div></td><td>${fh(x.plan)} / ${fh(x.done)} /${fh(x.total)}</td><td>${x.fin?'<span class="chip ok">ครบแล้ว</span>':chip(x)}</td><td>${x.fin||x.pdays==null?"–":x.pdays<0?`<span class="chip bad">เลย ${-x.pdays} วัน</span>`:x.pdays+" วัน"}</td><td>\${x.fin||x.days==null?"–":x.days<0?'<span class="chip bad">หมดอายุแล้ว</span>':x.days+" วัน"}</td></tr>`).join("")+`</tbody></table></div></section>`+hsWeeklyHtml(st):"";
+  return`<div id="tab-hs"\${tab==="hs"?"":" hidden"}><p class="sub">ใช้ข้อมูลรายแพ็คจากโบรชัวร์เนื้อหา ม.ปลาย: ชั่วโมงคลิปจริง และอายุคอร์ส (นับจากวันที่สมัคร) ติ๊กแพ็คที่น้องสมัคร ใส่วันที่สมัคร แล้วกำหนดวันเริ่ม/วันจบตามแผนของแต่ละแพ็ค (เว้นว่าง = ใช้วันที่สมัครถึงวันหมดอายุคอร์ส) ถ้าน้องได้อายุคอร์สเพิ่ม (เช่น สมัครครบ 3 คอร์ส ได้ 12 เดือน) แก้ช่อง อายุ (เดือน) ได้</p>${stats}${dash}<h2>📦 แพ็คที่สมัคร และรายการเรียน</h2>`+
+  SUBJ.map(s=>{const P=HP.filter(p=>p.s===s),n=P.filter(p=>hpInfo(st,p)).length;return`<section class="panel"><h2>${SE[s]\vert{}\vert{}"📘"} ${s} <small style="font-weight:400;color:var(--muted)">สมัครแล้ว ${n}/${P.length} แพ็ค</small></h2><div class="cds2">\${P.map(p=>packCard(st,p)).join("")}</div></section>`}).join("")+`</div>`}
+
+function hsPage(st){const L=hsAll(st);if(!L.length)return"";const h=hsSum(st),ag=hsAgg(st);
+  const ft=`<div class="ft"><span>${esc(nm(st))} · ออกรายงาน ${fd(TODAY)}</span><span>หน้า {{n}}</span></div>`;
+  return`<h1 style="font-size:18px">เนื้อหา ม.ปลาย: แพ็คที่สมัครและอายุคอร์ส</h1><div style="color:#5d6b82">${esc(nm(st))} · ออกรายงาน ${fd(TODAY)}</div>
+  <div class="box"><div class="bx"><b>\${h.n} แพ็ค</b>ที่สมัคร</div><div class="bx"><b>\${fh(h.done)} / ${fh(h.total)} ชม.</b>เรียนแล้ว ${h.total?Math.round(h.done/h.total*100):0}%</div><div class="bx"><b>${fh(ag.plan)} ชม.</b>ควรเรียนตามแผน ณ วันนี้ · ${rpSt(ag)}</div></div>
+  <h2>รายละเอียดแพ็ค</h2><table><thead><tr><th>วิชา</th><th>แพ็ค</th><th>สมัคร</th><th>หมดอายุ</th><th>เหลือ (วัน)</th><th>แผน / จริง / ทั้งหมด (ชม.)</th><th>สถานะ</th></tr></thead><tbody>`+
+  L.map(x=>`<tr><td>${x.p.s}</td><td>${esc(x.p.n)}${x.p.term?"<br>"+x.p.term:""}</td><td>${fd(x.r.enr)}</td><td>${fd(x.exp)}</td><td>${x.fin?"ครบแล้ว":x.days==null?"–":x.days<0?'<span class="r">หมดอายุแล้ว</span>':x.days<=30?`<span class="y">${x.days}</span>`:x.days}</td><td>${fh(x.plan)} /${fh(x.done)} / ${fh(x.total)}</td><td>${x.fin?'<span class="g">ครบแล้ว</span>':rpSt(x)}</td></tr>`).join("")+`</tbody></table>\${ft}`}
 
 /* staff */
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -413,6 +483,9 @@ function wauto(st,s,w){const p=st.subj[s];if(!p.on)return 0;let r=0;
 function wplan(st,s,w){const o=(st.wp||{})[w];if(st.subj[s].on&&o&&o[s]!==undefined)return o[s];return wauto(st,s,w)}
 const wact=(st,s,w)=>((st.wk||{})[w]||{})[s]||0;
 function wtot(st,w){let a=0,p=0;SUBJ.forEach(s=>{if(!st.subj[s].on)return;a+=wact(st,s,w);p+=wplan(st,s,w)});return{a,p}}
+function wchip(a,p,isCur){if(p<.05&&a<.05)return'<span class="chip wait">–</span>';
+  if(a>=p-.05)return`<span class="chip ok">\${a>p+.05?"เกินแผน +"+fh(a-p)+" ชม.":"ครบตามแผน"}</span>`;
+  return isCur?`<span class="chip wait">ยังขาด \${fh(p-a)} ชม.</span>`:`<span class="chip bad">ขาด \${fh(p-a)} ชม.</span>`}
 
 function cdInfo(st,s,t){const p=st.subj[s],a=agg(st,s,t);if(!p.on||!a.n)return null;const d=tdates(p,t);
   return{s,t,p,d,a,rem:Math.max(0,a.total-a.done),days:d.end?Math.round((D0(d.end)-D0(TODAY))/864e5):null,fin:a.total-a.done<.05}}
