@@ -147,7 +147,7 @@ img,svg{max-width:100%}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="config.js"></script>
 <script>
-const APP_VERSION="2026-10-15.3";
+const APP_VERSION="2026-10-15.4";
 const TR=["ติวเข้ม","UpSkill"];
 const C=[
 ["คณิต",0,"8303","Applied Math Admission TCAS เล่ม 1",45],["คณิต",0,"8304","Applied Math Admission TCAS เล่ม 2",40],["คณิต",0,"8305","Applied Math Admission TCAS เล่ม 3",32],["คณิต",0,"8306","Applied Math Admission TCAS เล่ม 4",40],["คณิต",0,"8307","Applied Math Admission TCAS เล่ม 5",36],["คณิต",1,"8309","UpSkill คณิตศาสตร์ประยุกต์",54],
@@ -250,7 +250,7 @@ function packCard(st,p){const x=hpInfo(st,p),r=(st.hp||{})[p.k]||{};
   <div class="src" style="margin-top:6px"><b>${pace}</b></div>
   <div class="src">แผน ณ วันนี้ ${fh(x.plan)} ชม. · ${x.fin?'<span class="chip ok">ครบแล้ว</span>':chip(x)}</div>
   <details data-s="p${p.k}" style="margin-top:8px"><summary style="padding:6px 8px;font-size:.9rem"><span>รายการเรียน (${p.it.length})</span><small>${fh(x.done)}/${fh(x.total)} ชม.</small></summary><div class="tk">`+
-  p.it.map(i=>{const w=Math.min(i.h,(st.hw||{})[i.c]||0),d=w>=i.h;return`<div class="item\${d?" done":""}"><input type="checkbox" id="h\${i.c}" data-hc="${i.c}"${d?" checked":""}><label for="h\${i.c}">${i.c}${esc(i.n)}</label><span class="m"><input class="w" type="number" min="0" max="\${i.h}" step="0.5" value="${fh(w)}" data-hv="${i.c}" aria-label="ชั่วโมงที่เรียนแล้ว ${esc(i.n)}"> / ${fh(i.h)} ชม.</span></div>`}).join("")+`</div></details></div>`}
+  p.it.map(i=>{const w=Math.min(i.h,(st.hw||{})[i.c]||0),d=w>=i.h;return`<div class="item${d?" done":""}"><input type="checkbox" id="h${i.c}" data-hc="${i.c}"${d?" checked":""}><label for="h${i.c}">${i.c} ${esc(i.n)}</label><span class="m"><input class="w" type="number" min="0" max="${i.h}" step="0.5" value="${fh(w)}" data-hv="${i.c}" aria-label="ชั่วโมงที่เรียนแล้ว ${esc(i.n)}"> / ${fh(i.h)} ชม.</span></div>`}).join("")+`</div></details></div>`}
 
 function hsChart(st){const el=$("hc0");if(!el)return;const S2=hsubs(st);if(!S2.length){el.innerHTML="";return}
   const A=S2.map(s=>hsAgg(st,s)),mx=Math.max(1,...A.map(a=>Math.max(a.plan,a.done,a.total)))*1.1;
