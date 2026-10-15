@@ -27,6 +27,7 @@ th{color:var(--muted);font-weight:500;font-size:.82rem}
 @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; transform: scale(1.03); } 100% { opacity: 0.8; } }
 button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 16px;border-radius:999px;transition:all .15s}
 button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+button:disabled{opacity:0.5;cursor:not-allowed}
 .f input,.f select,.f textarea{width:100%;font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
 .tb{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px}.tb input{flex:1;min-width:200px;font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 [hidden]{display:none!important}
@@ -67,7 +68,6 @@ button.primary{background:var(--accent);color:#fff;border-color:var(--accent);fo
 <div id="detail" hidden></div>
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 let API_URL = localStorage.getItem("tcas-api") || "";
 let TOKEN = localStorage.getItem("tcas-token") || "";
@@ -86,19 +86,25 @@ function toast(msg) {
 
 if (API_URL) \$("apiurl").value = API_URL;
 
+// ⚡ แก้ไขจุดนี้: ใช้ text/plain เพื่อป้องกันการโดน CORS บล็อกจาก Google Apps Script
 async function api(action, params = {}) {
   const url = \$("apiurl").value.trim() || API_URL;
   if (!url) throw new Error("กรุณากรอก Web app URL");
+  
+  const payload = Object.assign({ a: action, t: TOKEN }, params);
   const res = await fetch(url, {
     method: "POST",
-    body: JSON.stringify(Object.assign({ a: action, t: TOKEN }, params))
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
   });
+  
   const json = await res.json();
   if (!json.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
   return json.data;
 }
 
 \$("doLogin").onclick = async () => {
+  const btn = \$("doLogin");
   const url = \$("apiurl").value.trim();
   const code = \$("code").value.trim();
   \$("lerr").textContent = "";
@@ -107,7 +113,10 @@ async function api(action, params = {}) {
   if (!code) return \$("lerr").textContent = "กรุณากรอกรหัสผู้ใช้";
 
   try {
-    \$("lerr").textContent = "กำลังตรวจสอบรหัส...";
+    btn.disabled = true;
+    \$("lerr").style.color = "var(--ink)";
+    \$("lerr").textContent = "กำลังเชื่อมต่อระบบ...";
+    
     localStorage.setItem("tcas-api", url);
     API_URL = url;
 
@@ -121,7 +130,10 @@ async function api(action, params = {}) {
     toast("เข้าสู่ระบบสำเร็จ");
     loadData();
   } catch (err) {
+    \$("lerr").style.color = "var(--bad)";
     \$("lerr").textContent = err.message === "invalid" ? "รหัสผู้ใช้ไม่ถูกต้อง" : err.message;
+  } finally {
+    btn.disabled = false;
   }
 };
 
