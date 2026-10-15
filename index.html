@@ -4,37 +4,99 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>TCAS Tracker</title>
-<meta name="theme-color" content="#0b7f86">
+<meta name="theme-color" content="#0b7f86"><meta name="apple-mobile-web-app-capable" content="yes">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f8fc;--surface:#fff;--ink:#17233b;--muted:#5d6b82;--line:#e4e9f2;--accent:#0b7f86;--accent-soft:#e0f5f3;--ok:#1b7f4b;--ok-soft:#dcf3e5;--warn:#9a6a00;--warn-soft:#fbefc9;--bad:#b3304f;--bad-soft:#fadde4;--sh:0 1px 2px rgba(23,35,59,.05),0 8px 24px rgba(23,35,59,.06)}
+:root{--bg:#f3f6f9;--surface:#fff;--ink:#17233b;--muted:#5d6b82;--line:#d9e0ea;--accent:#0b7f86;--accent-soft:#d8f0f1;--ok:#1b7f4b;--ok-soft:#dcf3e5;--warn:#9a6a00;--warn-soft:#fbefc9;--bad:#b3304f;--bad-soft:#fadde4;--plan:#aab6c8;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1626;--surface:#162135;--ink:#e8eef8;--muted:#9aa9c2;--line:#2a3854;--accent:#45c3ca;--accent-soft:#12363a;--ok:#5fd397;--ok-soft:#14352a;--warn:#f0c14b;--warn-soft:#3b3014;--bad:#f07a98;--bad-soft:#401b28;--plan:#4a5a78}}
+:root[data-theme="dark"]{--bg:#0e1626;--surface:#162135;--ink:#e8eef8;--muted:#9aa9c2;--line:#2a3854;--accent:#45c3ca;--accent-soft:#12363a;--ok:#5fd397;--ok-soft:#14352a;--warn:#f0c14b;--warn-soft:#3b3014;--bad:#f07a98;--bad-soft:#401b28;--plan:#4a5a78}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 "Prompt","IBM Plex Sans Thai",sans-serif}
-main{max-width:1080px;margin:0 auto;padding:20px 16px 48px}
-h1{font-size:1.5rem;margin:0 0 4px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 "IBM Plex Sans Thai",system-ui,sans-serif}
+main{max-width:1040px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.5rem;margin:0 0 4px}h2{font-size:1.1rem;margin:0 0 10px}
 .sub{color:var(--muted);margin:0 0 16px}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:var(--sh)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:16px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--sh)}
-.stat b{display:block;font-size:1.6rem;line-height:1.2}.stat span{color:var(--muted);font-size:.85rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+.stat b{display:block;font-size:1.9rem;line-height:1.2}.stat span{color:var(--muted);font-size:.9rem}
+.stat.hero{background:var(--accent-soft);border-color:var(--accent)}
+.notice{border-left:4px solid var(--warn);background:var(--warn-soft);padding:10px 12px;border-radius:0 6px 6px 0;margin-bottom:16px;display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}
 .scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:600px}
-th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);font-size:.92rem}
-th{color:var(--muted);font-weight:500;font-size:.82rem}
-.chip{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.8rem;font-weight:500}
-.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.bad{background:var(--bad-soft);color:var(--bad)}
-.alert-badge{background:var(--bad-soft);color:var(--bad);padding:2px 8px;border-radius:12px;font-size:.78rem;font-weight:600;margin-left:6px;animation:pulse 2s infinite}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th,td{padding:7px 6px;text-align:left;border-bottom:1px solid var(--line);font-size:.94rem}
+th{color:var(--muted);font-weight:500;font-size:.85rem}
+.chip{display:inline-block;padding:1px 10px;border-radius:99px;font-size:.82rem;font-weight:500;white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.bad{background:var(--bad-soft);color:var(--bad)}.chip.wait{background:var(--warn-soft);color:var(--warn)}
+.alert-badge{background:var(--bad-soft);color:var(--bad);padding:2px 8px;border-radius:12px;font-size:.78rem;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-left:6px;animation:pulse 2s infinite}
 @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; transform: scale(1.03); } 100% { opacity: 0.8; } }
-button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 16px;border-radius:999px;transition:all .15s}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--accent)}
+details{border:1px solid var(--line);border-radius:8px;margin-bottom:10px;background:var(--surface)}
+summary{cursor:pointer;padding:10px 14px;font-weight:600;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+summary small{font-weight:400;color:var(--muted)}
+.tk{padding:0 14px 12px}.tk h3{font-size:.95rem;margin:10px 0 4px}
+.item{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line)}
+.item input{width:18px;height:18px;flex:none;accent-color:var(--accent)}
+.item label{flex:1;cursor:pointer}.item.done label{color:var(--muted);text-decoration:line-through}
+.item .m{color:var(--muted);font-size:.85rem;white-space:nowrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 14px;border-radius:6px}
 button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
-button:disabled{opacity:0.5;cursor:not-allowed}
-.f input,.f select,.f textarea{width:100%;font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
-.tb{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px}.tb input{flex:1;min-width:200px;font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
-[hidden]{display:none!important}
-#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:40;padding:16px}
-.lbox{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh);padding:24px;width:100%;max-width:400px}
-#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.9rem;z-index:50}
-#toast:empty{display:none}
+textarea{width:100%;min-height:130px;font:inherit;font-size:.9rem;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+input:focus-visible,textarea:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.legend{display:flex;gap:16px;font-size:.88rem;color:var(--muted);margin-top:4px}.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+svg text{fill:var(--muted);font-family:inherit}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}label.l{display:block;font-size:.85rem;color:var(--muted);margin-bottom:2px}input[type=date],input.w{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}input.w{width:72px}.item input[type=checkbox]{width:18px}.src{color:var(--muted);font-size:.85rem}.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.f input,.f textarea,.f select{width:100%;font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.f textarea{min-height:64px;min-width:0}.full{grid-column:1/-1}
+td input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);vertical-align:-2px}
+td label{margin-right:12px;white-space:nowrap;color:var(--ink);font-size:.94rem}
+.lnk{border:none;background:none;padding:0;font-weight:600;color:var(--accent);text-align:left}
+tr.rw:hover{background:var(--accent-soft)}
+.tb{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px}.tb input{flex:1;min-width:200px;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+.mode{font-size:.85rem;color:var(--muted)}.dng{color:var(--bad)}
+[hidden]{display:none!important}.tabs{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap}.tabs button{padding:9px 18px;font-weight:600}.tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cds2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(310px,100%),1fr));gap:12px;align-items:start}.note{background:var(--warn-soft);border-left:4px solid var(--warn);padding:8px 12px;border-radius:0 6px 6px 0;margin-bottom:12px}.who{font-size:.92rem;color:var(--muted);margin:0 0 10px}.sm{padding:3px 10px;font-size:.82rem}
+#dlg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:30}.dbox{background:var(--surface);color:var(--ink);padding:18px;border-radius:10px;max-width:420px;width:90%}.av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;overflow:hidden;background:var(--accent-soft);color:var(--accent);font-weight:600;flex:none}.av img{width:100%;height:100%;object-fit:cover;display:block}
+.prof{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}.ph{display:flex;flex-direction:column;gap:8px;align-items:center;width:130px}.nmc{display:flex;gap:12px;align-items:center}.nmc h1{margin:0}
+.btnl{display:inline-block;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 12px;border-radius:6px;font-size:.9rem}.btnl:focus-within{outline:2px solid var(--accent);outline-offset:1px}#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.9rem;z-index:20;max-width:90vw}#toast:empty{display:none}
+.rp{position:absolute;left:-10000px;top:0;width:794px;height:1123px;background:#fff;color:#17233b;padding:36px 40px;box-sizing:border-box;font:400 12px/1.5 "IBM Plex Sans Thai",sans-serif;overflow:hidden}
+.rp h1{font-size:21px;margin:0}.rp h2{font-size:14px;margin:14px 0 6px;color:#17233b}.rp table{min-width:0;width:100%;border-collapse:collapse}.rp th,.rp td{padding:4px 5px;border-bottom:1px solid #d9e0ea;font-size:11px;text-align:left;color:#17233b;vertical-align:middle}.rp th{background:#eef2f7;font-weight:600}
+.rp .g{color:#1b7f4b;font-weight:600}.rp .r{color:#b3304f;font-weight:600}.rp .y{color:#9a6a00;font-weight:600}.rp .kv{display:flex;flex-wrap:wrap;gap:2px 22px;margin-top:8px}.rp .box{display:flex;gap:10px;margin-top:10px}.rp .bx{flex:1;border:1px solid #d9e0ea;border-radius:6px;padding:6px 9px;color:#5d6b82;font-size:10.5px}.rp .bx b{display:block;font-size:16px;color:#17233b}
+.rp .ft{position:absolute;left:40px;right:40px;bottom:18px;font-size:10px;color:#5d6b82;display:flex;justify-content:space-between}.cds{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.cd{border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--surface)}.cd.warn{border-color:var(--warn)}.cd.late{border-color:var(--bad)}.cdh{display:flex;justify-content:space-between;align-items:center;gap:8px}.cdr{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px}.cdr b{font-size:1.5rem;line-height:1.2}.cdr small{font-size:.8rem;font-weight:400;color:var(--muted)}.cd .src{margin-top:3px}.wkbox{max-height:460px;overflow:auto;position:relative;border:1px solid var(--line);border-radius:6px}.wkbox thead th{position:sticky;top:0;background:var(--surface);z-index:1}.wkbox th small{font-weight:400}
+
+:root{--bg:#f6f8fc;--line:#e4e9f2;--accent-soft:#e0f5f3;--r:16px;--sh:0 1px 2px rgba(23,35,59,.05),0 8px 24px rgba(23,35,59,.06)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1727;--line:#27344f;--sh:0 8px 24px rgba(0,0,0,.25)}}
+:root[data-theme="dark"]{--bg:#0f1727;--line:#27344f;--sh:0 8px 24px rgba(0,0,0,.25)}
+body{font-family:"Prompt","IBM Plex Sans Thai",system-ui,sans-serif;line-height:1.65;background:radial-gradient(900px 320px at 8% -8%,var(--accent-soft),transparent 65%),var(--bg)}
+main{max-width:1080px}
+h1{font-size:1.7rem;font-weight:600;letter-spacing:-.01em}
+h2{font-size:1.08rem;font-weight:600}
+.panel,.stat,.cd,details{border-radius:var(--r);box-shadow:var(--sh)}
+.stat.hero{background:linear-gradient(135deg,var(--accent-soft),var(--surface));border-color:transparent}
+.stat b{font-weight:600}
+button,.btnl{border-radius:999px;padding:7px 16px;transition:transform .08s,background .15s}
+button:hover:not(:disabled){transform:translateY(-1px)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.primary{box-shadow:0 4px 12px rgba(11,127,134,.25)}
+.sm{padding:3px 12px}.lnk{padding:0;border-radius:0}.lnk:hover{transform:none}
+.tb input,.f input,.f select,.f textarea,input[type=date],input.w,textarea{border-radius:12px}
+.bar{height:10px;border-radius:999px}.bar i{border-radius:999px}
+.chip{padding:2px 12px}
+th{font-weight:500;font-size:.8rem;letter-spacing:.02em}
+tr.rw:hover{background:var(--accent-soft)}
+.av{box-shadow:0 0 0 3px var(--surface),0 0 0 4px var(--line)}
+.wkbox{border-radius:12px}
+.note,.notice,.insight{border-radius:12px}
+.tabs button.on{box-shadow:0 4px 12px rgba(11,127,134,.25)}
+
+#lerr.ok{color:var(--ok)!important}#lerr{white-space:pre-line;overflow-wrap:anywhere}
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:40;padding:16px;overflow:auto}
+.lbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:22px;width:100%;max-width:400px}
+img,svg{max-width:100%}
+
 .user-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:12px}
 .user-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--sh)}
 .user-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
@@ -45,331 +107,309 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 </head>
 <body>
 <main>
-<div id="login">
-  <div class="lbox">
-    <h1>🎓 TCAS Tracker</h1>
-    <p class="sub">เข้าสู่ระบบด้วยรหัสผู้ใช้</p>
-    <div id="urlbox" class="f" style="margin-bottom:12px">
-      <label style="font-size:.85rem;color:var(--muted)">Web app URL</label>
-      <input id="apiurl" placeholder="https://script.google.com/macros/s/…/exec">
-    </div>
-    <div class="f" style="margin-bottom:16px">
-      <label style="font-size:.85rem;color:var(--muted)">รหัสผู้ใช้</label>
-      <input id="code" type="password" placeholder="กรอกรหัสที่ได้รับ">
-    </div>
-    <button class="primary" id="doLogin" style="width:100%">เข้าสู่ระบบ</button>
-    <p id="lerr" style="margin:10px 0 0;font-size:.85rem;color:var(--bad)"></p>
-  </div>
-</div>
-
-<div id="toast"></div>
-<div id="who" style="margin-bottom:12px;font-size:.9rem;color:var(--muted)"></div>
-<div id="home" hidden></div>
+<div id="login"><div class="lbox"><h1>🎓 TCAS Tracker</h1><p class="sub" style="margin:0 0 14px">เข้าสู่ระบบด้วยรหัสผู้ใช้ (Main user หรือ Sub user)</p>
+<div id="urlbox" class="f" style="margin-bottom:10px"><label class="l" for="apiurl">Web app URL (ตั้งครั้งเดียว)</label><input id="apiurl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div>
+<div class="f"><label class="l" for="code">รหัสผู้ใช้</label><input id="code" type="password" autocomplete="current-password" placeholder="รหัสที่ได้รับ"></div>
+<button class="primary" id="doLogin" style="width:100%;margin-top:14px">เข้าสู่ระบบ</button><button id="doTest" style="width:100%;margin-top:8px">🔍 ทดสอบการเชื่อมต่อ</button><p id="lerr" class="src" style="margin:10px 0 0;color:var(--bad)"></p><div id="ver" class="src" style="margin:12px 0 0;text-align:center"></div></div></div>
+<div id="msg" class="mode"></div><div id="toast" role="status"></div><div id="dlg" hidden></div><div id="upd" hidden></div>
+<div id="who"></div>
+<div id="home"></div>
 <div id="detail" hidden></div>
 </main>
-
+<datalist id="bl"><option>DEK70</option><option>DEK71</option><option>DEK72</option><option>DEK73</option></datalist>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-let API_URL = localStorage.getItem("tcas-api") || "";
-let TOKEN = localStorage.getItem("tcas-token") || "";
-let ME = null;
-let STUDENTS = [];
-let USERS = [];
+const APP_VERSION="2026-10-15.3";
+const TR=["ติวเข้ม","UpSkill"];
+const C=[
+["คณิต",0,"8303","Applied Math Admission TCAS เล่ม 1",45],["คณิต",0,"8304","Applied Math Admission TCAS เล่ม 2",40],["คณิต",0,"8305","Applied Math Admission TCAS เล่ม 3",32],["คณิต",0,"8306","Applied Math Admission TCAS เล่ม 4",40],["คณิต",0,"8307","Applied Math Admission TCAS เล่ม 5",36],["คณิต",1,"8309","UpSkill คณิตศาสตร์ประยุกต์",54],
+["ฟิสิกส์",0,"1301","V-Series เล่ม 1 กลุ่มกลศาสตร์ 1",16],["ฟิสิกส์",0,"1302","V-Series เล่ม 2 กลุ่มกลศาสตร์ 2",28],["ฟิสิกส์",0,"1303","V-Series เล่ม 3 กลุ่มกลศาสตร์ 3",12.5],["ฟิสิกส์",0,"1304","V-Series เล่ม 4 กลุ่มสมบัติสาร",24.5],["ฟิสิกส์",0,"1305","V-Series เล่ม 5 กลุ่มไฟฟ้า",32],["ฟิสิกส์",0,"1306","V-Series เล่ม 6 กลุ่มคลื่น",21.5],["ฟิสิกส์",0,"1307","V-Series เล่ม 7 ฟิสิกส์แผนใหม่",25.5],["ฟิสิกส์",1,"1316","UpSkill ฟิสิกส์ A-Level",36],
+["เคมี",0,"3301","เคมี TCAS เล่ม 1 กลุ่มอะตอม",48],["เคมี",0,"3302","เคมี TCAS เล่ม 2 กลุ่มปริมาณสารสัมพันธ์",28],["เคมี",0,"3303","เคมี TCAS เล่ม 3 กลุ่มแก๊ส อัตราและสมดุลเคมี",28],["เคมี",0,"3304","เคมี TCAS เล่ม 4 กลุ่มกรด-เบสและเคมีไฟฟ้า",48.5],["เคมี",0,"3305","เคมี TCAS เล่ม 5 กลุ่มเคมีอินทรีย์",36],["เคมี",1,"3307","UpSkill เคมี A-Level",60],
+["ชีววิทยา",0,"2301","Biology TCAS เล่ม 1 Basic Bio",27],["ชีววิทยา",0,"2302","Biology TCAS เล่ม 2 Genetics",52],["ชีววิทยา",0,"2303","Biology TCAS เล่ม 3 Taxo & Eco",33.5],["ชีววิทยา",0,"2304","Biology TCAS เล่ม 4 Human I",27],["ชีววิทยา",0,"2305","Biology TCAS เล่ม 5 Human II",31.5],["ชีววิทยา",0,"2306","Biology TCAS เล่ม 6 Plant",23],["ชีววิทยา",1,"2307","UpSkill ชีววิทยา A-Level",45],
+["English",0,"P3009","English TCAS Success A-Level",60],["English",1,"P2033","Upskill English A-Level",24]
+].map(a=>({s:a[0],t:a[1],c:a[2],n:a[3],h:a[4]}));
+const SUBJ=[...new Set(C.map(x=>x.s))];
+const $=id=>document.getElementById(id),fh=v=>(Math.round(v*10)/10).toString();
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const TODAY=iso(new Date()),D0=s=>new Date(s+"T00:00"),addD=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
+const fd=s=>s?D0(s).toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"}):"–";
+const BATCHES=Array.from({length:11},(_,i)=>"DEK"+(71+i));
+let tab="comp",hv="all",sf="",STAFF=[],ME={id:"",owner:true,reg:true,name:"",joined:""},lastId=null,S=[],cur=null,readOnly=false,typing=false,q="",mode="shared";
+const nm=s=>[s.first,s.last].filter(Boolean).join(" ")+(s.nick?` (\${s.nick})`:"");
 
-const \$ = id => document.getElementById(id);
-const esc = s => String(s || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function blank(){const subj={};SUBJ.forEach(s=>subj[s]={on:false,t:[1,1],enr:TODAY,start:TODAY,end:"",ustart:"",uend:""});
+  return{id:"s"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),first:"",last:"",nick:"",ondy:"",photo:"",phone:"",school:"",uni:"",faculty:"",batch:"DEK71",note:"",price:"",subj,w:{},wk:{},wp:{},hp:{},hw:{},hwk:{},hwp:{},cn:{},staffId:"",staffName:""}}
+function norm(s){const b=blank();s.subj=s.subj||{};SUBJ.forEach(k=>{s.subj[k]=Object.assign(b.subj[k],s.subj[k]||{});if(!Array.isArray(s.subj[k].t))s.subj[k].t=[1,1]});s.w=s.w||{};s.wk=s.wk||{};s.wp=s.wp||{};s.hp=s.hp||{};s.hw=s.hw||{};s.hwk=s.hwk||{};s.hwp=s.hwp||{};s.cn=s.cn||{};s.price=s.price||"";s.staffId=s.staffId||"";s.staffName=s.staffName||"";return s}
 
-function toast(msg) {
-  const t = \$("toast");
-  t.textContent = msg;
-  setTimeout(() => { t.textContent = ""; }, 3000);
+const av=(st,z)=>`<span class="av" style="width:${z}px;height:${z}px;font-size:${Math.round(z*.42)}px">${st.photo?`<img src="${st.photo}" alt="รูป ${esc(st.nick||st.first)}">`:esc(Array.from(st.nick||st.first||"?")[0])}</span>`;
+
+/* ม.ปลาย */
+const SE={"คณิต":"📐","ฟิสิกส์":"⚡","เคมี":"🧪","ชีววิทยา":"🧬","English":"🔤"};
+const HS=[
+["คณิต","8281","Pack 1 คณิต ม.ปลาย (8201-8204)","ม.4 เทอม 1",8,[["8201","เซต",24],["8202","ตรรกศาสตร์เบื้องต้น และการให้เหตุผล",33],["8203","ระบบจำนวนจริง",30],["8204","ทฤษฎีจำนวนเบื้องต้น",16]]],
+["คณิต","8282","Pack 2 คณิต ม.ปลาย (8205-8207)","ม.4 เทอม 2",8,[["8205","เรขาคณิตวิเคราะห์และภาคตัดกรวย",30],["8206","ความสัมพันธ์และฟังก์ชัน",30],["8207","เมทริกซ์",30]]],
+["คณิต","8283","Pack 3 คณิต ม.ปลาย (8209-8211)","ม.5 เทอม 1",8,[["8209","ฟังก์ชันเอกซ์โพเนนเชียล และฟังก์ชันลอการิทึม",30.5],["8210","ฟังก์ชันตรีโกณมิติและการประยุกต์",42],["8211","เวกเตอร์และทฤษฎีกราฟ",22.5]]],
+["คณิต","8284","Pack 4 คณิต ม.ปลาย (8212-8214)","ม.5 เทอม 2",8,[["8212","ลำดับและอนุกรม",23.5],["8213","ความน่าจะเป็น",24],["8214","จำนวนเชิงซ้อน",26]]],
+["คณิต","8285","Pack 5 คณิต ม.ปลาย (8215-8216)","ม.6 เทอม 1",8,[["8215","แคลคูลัส",34.5],["8216","สถิติ ตัวแปรสุ่ม และการแจกแจงความน่าจะเป็น",24]]],
+["ฟิสิกส์","0281","Pack กลศาสตร์ 1 (0201-0204)","ม.4 เทอม 1",8,[["0201","บทนำ และการวัด",10],["0202","การเคลื่อนที่แนวตรง",16],["0203","กฎของนิวตัน",12],["0204","สมดุลกล",12]]],
+["ฟิสิกส์","0282","Pack กลศาสตร์ 2 (0205-0208)","ม.4 เทอม 2",8,[["0205","งาน และพลังงาน",12],["0206","โมเมนตัม",12],["0207","การเคลื่อนที่วิถีโค้ง",10],["0208","การเคลื่อนที่วงกลมและดวงดาว",16]]],
+["เคมี","3291","Pack กลุ่มอะตอม ตารางธาตุ และพันธะเคมี (3201-3204)","ม.4 เทอม 1",8,[["3201","ปรับพื้นฐานเคมี ม.ปลาย",12.5],["3202","อะตอม และตารางธาตุ",20],["3203","สมบัติของธาตุ และสารประกอบ",20],["3204","พันธะเคมี",32]]],
+["ชีววิทยา","2291","Pack กลุ่มพื้นฐานชีววิทยา (2201-2206)","ม.4 เทอม 1",8,[["2201","ธรรมชาติของสิ่งมีชีวิต และสิ่งแวดล้อม",2],["2202","การศึกษาชีววิทยา และกล้องจุลทรรศน์",8],["2203","เคมีที่เป็นพื้นฐานของสิ่งมีชีวิต และสารชีวโมเลกุล",14],["2204","เซลล์ของสิ่งมีชีวิต",12],["2205","ปฏิกิริยาเคมีในเซลล์ของสิ่งมีชีวิต และเอนไซม์",4],["2206","การแบ่งเซลล์",7]]],
+["English","P3005","Pack Essential ปูพื้นฐานภาษาอังกฤษ ม.ปลาย (P2011+P2012)","",12,[["P2011","Grammar Essential ม.ปลาย",50],["P2012","Reading & Vocab Essential ม.ปลาย",40]]]
+];
+const HP=HS.map(a=>({s:a[0],k:a[1],n:a[2],term:a[3],mo:a[4],it:a[5].map(x=>({c:x[0],n:x[1],h:x[2],k:a[1]}))}));
+HP.forEach(p=>p.h=p.it.reduce((n,x)=>n+x.h,0));
+const HI={};HP.forEach(p=>p.it.forEach(x=>HI[x.c]=x));
+
+function addMo(s,m){const d=D0(s),day=d.getDate();d.setMonth(d.getMonth()+m);if(d.getDate()!==day)d.setDate(0);return iso(d)}
+function hpInfo(st,p){const r=(st.hp||{})[p.k];if(!r||!r.on)return null;const mo=+r.mo||p.mo,exp=r.enr?addMo(r.enr,mo):"",days=exp?Math.round((D0(exp)-D0(TODAY))/864e5):null;
+  const done=p.it.reduce((n,x)=>n+Math.min(x.h,(st.hw||{})[x.c]||0),0);
+  const f=r.enr&&exp?Math.max(0,Math.min(1,(D0(TODAY)-D0(r.enr))/(D0(exp)-D0(r.enr)))):null;
+  const ps=r.ps||r.enr||"",pe=r.pe||exp||"",ok=ps&&pe&&D0(pe)>D0(ps),pf=ok?Math.max(0,Math.min(1,(D0(TODAY)-D0(ps))/(D0(pe)-D0(ps)))):null,pdays=pe?Math.round((D0(pe)-D0(TODAY))/864e5):null;
+  return{p,r,mo,exp,days,done,total:p.h,rem:Math.max(0,p.h-done),fin:p.h-done<.05,f,ps,pe,pf,pdays,plan:p.h*(pf||0),np:pf==null,n:1}}
+const hsAll=st=>HP.map(p=>hpInfo(st,p)).filter(Boolean);
+
+/* 🔔 เช็คว่าน้องถึงวันที่ต้องติดตามประจำสัปดาห์หรือไม่ */
+function needsAlert(st) {
+  const cw = mon(TODAY);
+  const t = wtot(st, cw);
+  if (t.p - t.a > 0.5) return true;
+  const d = due(st);
+  if (d && d.d <= 7) return true;
+  return false;
 }
 
-if (API_URL) \$("apiurl").value = API_URL;
+const sname=id=>{const m=STAFF.find(x=>x.id===id);return m?m.name:""};
+const sn=st=>st.staffId?(sname(st.staffId)||st.staffName||"(ไม่ทราบชื่อ)"):"ไม่ระบุพนักงาน";
+function canEdit(st){if(readOnly)return false;if(mode!=="shared"||ME.owner)return true;return !st.staffId||st.staffId===ME.id}
+function cls(st){const a=agg(st,null,null);if(a.n)return a.np?"np":(a.done-a.plan<-.05?"beh":"ok");return "np"}
 
-// ⚡ แก้ไขจุดนี้: ใช้ text/plain เพื่อป้องกันการโดน CORS บล็อกจาก Google Apps Script
-async function api(action, params = {}) {
-  const url = \$("apiurl").value.trim() || API_URL;
-  if (!url) throw new Error("กรุณากรอก Web app URL");
-  
-  const payload = Object.assign({ a: action, t: TOKEN }, params);
-  const res = await fetch(url, {
-    method: "POST",
+function staffStats(){const g={};S.forEach(x=>{const k=x.staffId||"";(g[k]=g[k]||[]).push(x)});STAFF.forEach(x=>{if(!g[x.id])g[x.id]=[]});
+  return Object.keys(g).map(k=>{const L=g[k],m=STAFF.find(x=>x.id===k),c={beh:0,ok:0,np:0,hs:0};L.forEach(x=>c[cls(x)]++);
+    const pct=L.length?Math.round(L.reduce((n,x)=>{const a=agg(x,null,null);return n+(a.total?a.done/a.total:0)},0)/L.length*100):0;
+    const totalPrice=L.reduce((sum,x)=>sum+(+x.price||0),0);
+    return{id:k,name:m?m.name:(k?(L[0]&&L[0].staffName)||"(ไม่ทราบชื่อ)":"ไม่ระบุพนักงาน"),seen:m?m.seen:"",n:L.length,beh:c.beh,ok:c.ok,np:c.np,pct,totalPrice}}).sort((a,b)=>a.name.localeCompare(b.name,"th"))}
+
+function staffCards(){
+  const T=staffStats();
+  const form=`<div class="row f" style="align-items:flex-end;margin:0 0 8px"><div style="flex:1;min-width:200px"><label class="l" for="newsub">ชื่อ Sub user ใหม่</label><input id="newsub" maxlength="40" placeholder="เช่น พี่เอ"></div><button class="primary" id="addsub">➕ เพิ่ม Sub user</button></div>`;
+  const cards=T.filter(t=>t.id!=="main" && t.id!=="").map(t=>{
+    const u=USERS.find(x=>x.id===t.id);
+    return `<div class="user-card">
+      <div class="user-card-head">
+        <div><b style="font-size:1.1rem">\${esc(t.name)}</b><div class="src">ใช้งานล่าสุด: \${fd(t.seen)}</div></div>
+        <div>\${u?`<span class="chip ${u.active?'ok':'bad'}">${u.active?'เปิดใช้งาน':'ปิดใช้งาน'}</span>`:''}</div>
+      </div>
+      <div class="user-card-body">
+        <div class="user-card-stat"><span>นักเรียน</span><b>\${t.n} คน</b></div>
+        <div class="user-card-stat"><span>ยอดขายรวม</span><b style="color:var(--ok)">฿\${t.totalPrice.toLocaleString()}</b></div>
+        <div class="user-card-stat"><span>ล่าช้า</span><b class="${t.beh?'dng':''}">${t.beh} คน</b></div>
+        <div class="user-card-stat"><span>ตามแผน</span><b>\${t.ok} คน</b></div>
+      </div>
+      <div class="row" style="margin:0;gap:6px">
+        <button class="sm primary" data-sf="\${esc(t.id||"-")}">ดูนักเรียน (${t.n})</button>${u?`<button class="sm dng" data-du="${u.id}">🗑️ ลบ Sub user</button>`:""}
+      </div>
+    </div>`;
+  }).join("");
+  return form + `<div class="user-card-grid">\${cards || '<p class="sub">ยังไม่มี Sub user ในระบบ</p>'}</div>`;
+}
+
+function whoHtml(){if(!ME.id)return"";return`<div class="who">คุณคือ <b>${esc(ME.name)}</b> (${ME.owner?"Main user":"Sub user"}) · <button class="lnk" id="refresh">🔄 รีเฟรชข้อมูล</button> · <button class="lnk" id="logout">ออกจากระบบ</button> · <span class="src">v\${APP_VERSION}</span></div>`}
+
+const timers={};
+function toast(t){const el=$("toast");el.textContent=t;clearTimeout(tt);tt=setTimeout(()=>{el.textContent=""},4000)}
+let tt=null;
+
+function save(st,now){clearTimeout(timers[st.id]);
+  const go=async()=>{typing=false;try{await api("save",{s:clone(st)});}catch(e){toast("บันทึกไม่สำเร็จ")}};
+  if(now)go();else timers[st.id]=setTimeout(go,600)}
+
+const clone=o=>JSON.parse(JSON.stringify(o));
+const API_URL="";
+let TOKEN="",USERS=[],SINCE=0,PEND={};
+
+async function api(a,p){
+  const url=apiUrl();if(!url)throw new Error("no api url");
+  let r=await fetch(url,{
+    method:"POST",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(payload)
+    body:JSON.stringify(Object.assign({a,t:TOKEN},p||{}))
   });
-  
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
-  return json.data;
+  let j=await r.json();
+  if(!j.ok)throw new Error(j.error||"error");
+  return j.data;
 }
 
-\$("doLogin").onclick = async () => {
-  const btn = \$("doLogin");
-  const url = \$("apiurl").value.trim();
-  const code = \$("code").value.trim();
-  \$("lerr").textContent = "";
+const apiUrl=()=>{try{return localStorage.getItem("tcas-api")||""}catch(e){return""}};
 
-  if (!url) return \$("lerr").textContent = "กรุณากรอก Web app URL";
-  if (!code) return \$("lerr").textContent = "กรุณากรอกรหัสผู้ใช้";
-
-  try {
-    btn.disabled = true;
-    \$("lerr").style.color = "var(--ink)";
-    \$("lerr").textContent = "กำลังเชื่อมต่อระบบ...";
-    
-    localStorage.setItem("tcas-api", url);
-    API_URL = url;
-
-    const data = await api("login", { code });
-    TOKEN = data.token;
-    ME = data.me;
-    localStorage.setItem("tcas-token", TOKEN);
-
-    \$("login").hidden = true;
-    \$("home").hidden = false;
-    toast("เข้าสู่ระบบสำเร็จ");
-    loadData();
-  } catch (err) {
-    \$("lerr").style.color = "var(--bad)";
-    \$("lerr").textContent = err.message === "invalid" ? "รหัสผู้ใช้ไม่ถูกต้อง" : err.message;
-  } finally {
-    btn.disabled = false;
+async function doLogin(){
+  const code=($("code").value||"").trim();
+  const u=($("apiurl").value||"").trim();
+  if(!u){$("lerr").textContent="กรอก Web app URL";return}
+  if(!code){$("lerr").textContent="กรอกรหัสผู้ใช้";return}
+  localStorage.setItem("tcas-api",u);
+  $("lerr").className="src";$("lerr").textContent="กำลังเข้าสู่ระบบ…";
+  try{
+    const r=await api("login",{code});
+    TOKEN=r.token;
+    localStorage.setItem("tcas-token",TOKEN);
+    await enter(r.me);
+  }catch(e){
+    $("lerr").textContent=e.message==="invalid"?"รหัสผู้ใช้ไม่ถูกต้อง":e.message;
   }
-};
+}
 
-async function loadData() {
-  try {
-    const data = await api("list", { since: 0 });
-    STUDENTS = data.students || [];
-    if (ME.role === "main") {
-      const uData = await api("users");
-      USERS = uData.users || [];
+function logout(){TOKEN="";localStorage.removeItem("tcas-token");S=[];USERS=[];STAFF=[];cur=null;ME={id:""};render();$("login").hidden=false}
+
+async function enter(m){
+  ME={id:m.id,owner:m.role==="main",reg:true,name:m.name};
+  hv=ME.owner?"all":"mine";sf="";
+  STAFF=[{id:ME.id,name:ME.name}];S=[];
+  $("login").hidden=true;toast("กำลังโหลดข้อมูล…");
+  try{await pull(true);if(ME.owner)await loadUsers()}catch(e){}
+  render();
+}
+
+async function loadUsers(){const r=await api("users");USERS=r.users;STAFF=[{id:"main",name:"เจ้าของระบบ (Main)"}].concat(USERS.map(u=>({id:u.id,name:u.name})))}
+async function pull(full){const r=await api("list",{since:full?0:SINCE});SINCE=Math.max(0,r.now-3000);S=r.students.map(norm);return true}
+
+/* calc */
+const tdates=(p,t)=>t===1?{start:p.ustart||p.start,end:p.uend||p.end}:{start:p.start,end:p.end};
+function tspans(st){const o=[];SUBJ.forEach(s=>{const p=st.subj[s];if(!p.on)return;[0,1].forEach(t=>{if(p.t[t]){const d=tdates(p,t);o.push({s,t,start:d.start,end:d.end})}})});return o}
+function frac(p,t){const d=tdates(p,t||0);if(!d.start||!d.end||!(D0(d.end)>D0(d.start)))return null;return Math.max(0,Math.min(1,(D0(TODAY)-D0(d.start))/(D0(d.end)-D0(d.start))))}
+function agg(st,s,t){let total=0,done=0,plan=0,n=0,np=false;
+  SUBJ.forEach(sj=>{if(s!=null&&sj!==s)return;const p=st.subj[sj];if(!p.on)return;
+    C.forEach(x=>{if(x.s!==sj||(t!=null&&x.t!==t)||!p.t[x.t])return;const f=frac(p,x.t);total+=x.h;done+=Math.min(x.h,st.w[x.c]||0);plan+=x.h*(f||0);n++;if(f==null)np=true})});
+  return{total,done,plan,n,np}}
+function chip(a){if(!a.n)return'<span class="chip wait">–</span>';if(a.np)return'<span class="chip wait">ยังไม่ตั้งแผน</span>';
+  const g=a.done-a.plan;if(Math.abs(g)<.05)return'<span class="chip ok">ตามแผน</span>';
+  return g>0?`<span class="chip ok">ล้ำหน้า +\${fh(g)} ชม.</span>`:`<span class="chip bad">ล่าช้า \${fh(-g)} ชม.</span>`}
+function due(st){let b=null;tspans(st).forEach(z=>{if(!z.end)return;const a=agg(st,z.s,z.t);if(!a.n||a.total-a.done<.05)return;
+  const d=Math.round((D0(z.end)-D0(TODAY))/864e5);if(!b||d<b.d)b={d,s:z.s+" ("+TR[z.t]+")",r:Math.max(0,a.total-a.done)}});return b}
+function dueTxt(st){const b=due(st);if(!b)return"–";return b.d<0?`<span class="chip bad">เลยกำหนด \${-b.d} วัน</span>`:`อีก \${b.d} วัน`}
+
+const mon=s=>{const d=D0(s),k=(d.getDay()+6)%7;d.setDate(d.getDate()-k);return iso(d)};
+const addDays=(s,n)=>{const d=D0(s);d.setDate(d.getDate()+n);return iso(d)};
+function weeks(st){const E=tspans(st).filter(x=>x.start);if(!E.length)return[];
+  const a=E.map(x=>x.start).sort()[0],cw=mon(TODAY);
+  let w=mon(a);const out=[];while(w<=cw&&out.length<80){out.push(w);w=addDays(w,7)}return out}
+function wauto(st,s,w){const p=st.subj[s];if(!p.on)return 0;let r=0;
+  [0,1].forEach(t=>{if(!p.t[t])return;const d=tdates(p,t);if(!d.start||!d.end||!(D0(d.end)>D0(d.start)))return;
+    const a=Math.max(D0(w),D0(d.start)),b=Math.min(D0(addDays(w,7)),D0(d.end)),dy=Math.max(0,(b-a)/864e5);
+    r+=agg(st,s,t).total*dy/((D0(d.end)-D0(d.start))/864e5)});return r}
+function wplan(st,s,w){const o=(st.wp||{})[w];if(st.subj[s].on&&o&&o[s]!==undefined)return o[s];return wauto(st,s,w)}
+const wact=(st,s,w)=>((st.wk||{})[w]||{})[s]||0;
+function wtot(st,w){let a=0,p=0;SUBJ.forEach(s=>{if(!st.subj[s].on)return;a+=wact(st,s,w);p+=wplan(st,s,w)});return{a,p}}
+
+function wbAllList(studentList){
+  const wb=XLSX.utils.book_new(),add=(n,rows)=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),n);
+  add("ภาพรวมนักเรียน",[["ชื่อ","สกุล","ชื่อเล่น","รหัส ONDY","เบอร์โทร","โรงเรียน","รุ่น TCAS","ราคาคอร์ส (บาท)","ชั่วโมงทั้งหมด","เรียนแล้ว (ชม.)","พนักงานดูแล"],
+    ...studentList.map(t=>{const a=agg(t,null,null);return[t.first,t.last,t.nick,t.ondy,t.phone,t.school,t.batch,t.price?+t.price:0,Math.round(a.total),Math.round(a.done),sn(t)]})]);
+  
+  studentList.forEach(st=>{
+    const E=SUBJ.filter(s=>st.subj[s].on);
+    if(E.length){
+      const name = (st.nick || st.first || "นักเรียน").slice(0, 20);
+      const rows = [["สัปดาห์เริ่ม","สัปดาห์สิ้นสุด",...E.flatMap(j=>[j+" แผน",j+" จริง"]),"รวมแผน","รวมจริง"],
+        ...weeks(st).map(w=>{const t=wtot(st,w);return[w,addDays(w,6),...E.flatMap(j=>[Math.round(wplan(st,j,w)),Math.round(wact(st,j,w))]),Math.round(t.p),Math.round(t.a)]})];
+      add(`TCAS-\${name}`, rows);
     }
-    renderHome();
-  } catch (err) {
-    toast("โหลดข้อมูลไม่สำเร็จ: " + err.message);
-  }
-}
-
-function renderHome() {
-  \$("who").innerHTML = `ผู้ใช้งาน: <b>${esc(ME.name)}</b> (${ME.role === "main" ? "Main User" : "Sub User"}) | <button onclick="logout()" style="padding:2px 10px;font-size:.8rem">ออกจากระบบ</button>`;
-  
-  const totalPrice = STUDENTS.reduce((sum, s) => sum + (+s.price || 0), 0);
-  
-  let userSection = "";
-  if (ME.role === "main") {
-    const userCards = USERS.map(u => {
-      const uStudents = STUDENTS.filter(s => s.staffId === u.id);
-      const uPrice = uStudents.reduce((sum, s) => sum + (+s.price || 0), 0);
-      return `
-        <div class="user-card">
-          <div class="user-card-head">
-            <b>${esc(u.name)}</b>
-            <span class="chip ${u.active ? 'ok' : 'bad'}">${u.active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}</span>
-          </div>
-          <div class="user-card-body">
-            <div class="user-card-stat"><span>นักเรียน</span><b>${uStudents.length} คน</b></div>
-            <div class="user-card-stat"><span>ยอดขาย</span><b style="color:var(--ok)">฿${uPrice.toLocaleString()}</b></div>
-          </div>
-          <div style="display:flex;gap:4px">
-            <button onclick="delSubUser('${u.id}')" style="color:var(--bad);padding:3px 8px;font-size:.8rem">🗑️ ลบ Sub user</button>
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    userSection = `
-      <div class="panel">
-        <h2>🧑‍🏫 Dashboard รายบุคคล Sub User</h2>
-        <div style="margin-bottom:10px;display:flex;gap:8px">
-          <input id="newSubName" placeholder="ชื่อ Sub user ใหม่" style="padding:6px 10px;border-radius:8px;border:1px solid var(--line)">
-          <button class="primary" onclick="addSubUser()">+ เพิ่ม Sub user</button>
-        </div>
-        <div class="user-card-grid">${userCards || '<p class="sub">ยังไม่มี Sub user</p>'}</div>
-      </div>
-    `;
-  }
-
-  \$("home").innerHTML = `
-    <h1>🎓 ติดตามนักเรียนที่สมัครคอร์ส</h1>
-    <div class="stats">
-      <div class="stat"><b>${STUDENTS.length} คน</b><span>นักเรียนทั้งหมด</span></div>
-      <div class="stat"><b style="color:var(--ok)">฿${totalPrice.toLocaleString()}</b><span>สรุปยอดขายรวม</span></div>
-    </div>
-    ${userSection}
-    <div class="panel">
-      <div class="tb">
-        <input id="q" placeholder="ค้นหาชื่อนักเรียน..." oninput="filterTable()">
-        <button class="primary" onclick="addStudent()">+ เพิ่มนักเรียน</button>
-        <button onclick="exportDriveSheet()">📗 สร้าง Google Sheet ใน Drive ของฉัน</button>
-      </div>
-      <div class="scroll">
-        <table>
-          <thead>
-            <tr><th>ชื่อ-สกุล</th><th>เบอร์โทร</th><th>รุ่น</th><th>ราคาคอร์ส (หลังหักส่วนลด)</th><th>การติดตาม</th><th>จัดการ</th></tr>
-          </thead>
-          <tbody id="stbody">
-            ${renderTableRows(STUDENTS)}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function renderTableRows(list) {
-  if (!list.length) return `<tr><td colspan="6" style="text-align:center;color:var(--muted)">ยังไม่มีข้อมูลนักเรียน</td></tr>`;
-  return list.map(s => `
-    <tr>
-      <td><b>${esc(s.first)} ${esc(s.last)}</b> (${esc(s.nick || "-")})</td>
-      <td>${esc(s.phone || "-")}</td>
-      <td>${esc(s.batch || "-")}</td>
-      <td>฿${(+s.price || 0).toLocaleString()}</td>
-      <td><span class="alert-badge">🔔 ต้องติดตามสัปดาห์นี้</span></td>
-      <td><button onclick="editStudent('${s.id}')" style="padding:3px 10px;font-size:.8rem">ดู/แก้ไข</button></td>
-    </tr>
-  `).join("");
-}
-
-function filterTable() {
-  const q = \$("q").value.toLowerCase();
-  const filtered = STUDENTS.filter(s => (s.first + s.last + s.nick).toLowerCase().includes(q));
-  \$("stbody").innerHTML = renderTableRows(filtered);
-}
-
-async function addStudent() {
-  const first = prompt("กรอกชื่อนักเรียน:");
-  if (!first) return;
-  const newSt = { id: "s" + Date.now().toString(36), first: first, last: "", nick: "", price: 0, batch: "DEK71" };
-  try {
-    await api("save", { s: newSt });
-    STUDENTS.push(newSt);
-    renderHome();
-    toast("เพิ่มนักเรียนเรียบร้อย");
-  } catch (err) {
-    toast("บันทึกไม่สำเร็จ: " + err.message);
-  }
-}
-
-async function addSubUser() {
-  const name = \$("newSubName").value.trim();
-  if (!name) return toast("กรอกชื่อ Sub user ก่อน");
-  try {
-    const res = await api("addUser", { name });
-    alert(`สร้าง Sub user เรียบร้อย\nรหัสเข้าใช้งานคือ: ${res.code}`);
-    loadData();
-  } catch (err) {
-    toast("เพิ่มไม่สำเร็จ: " + err.message);
-  }
-}
-
-async function delSubUser(id) {
-  if (!confirm("ยืนยันลบ Sub user คนนี้?")) return;
-  try {
-    await api("delUser", { id });
-    toast("ลบ Sub user เรียบร้อย");
-    loadData();
-  } catch (err) {
-    toast("ลบไม่สำเร็จ: " + err.message);
-  }
-}
-
-function editStudent(id) {
-  const s = STUDENTS.find(x => x.id === id);
-  if (!s) return;
-  \$("home").hidden = true;
-  \$("detail").hidden = false;
-  
-  \$("detail").innerHTML = `
-    <button onclick="backToHome()">← กลับหน้ารายชื่อ</button>
-    <div class="panel" style="margin-top:12px">
-      <h2>แก้ไขข้อมูล: ${esc(s.first)}</h2>
-      <div class="f" style="display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
-        <div><label>ชื่อ</label><input id="efirst" value="${esc(s.first)}"></div>
-        <div><label>นามสกุล</label><input id="elast" value="${esc(s.last)}"></div>
-        <div><label>ชื่อเล่น</label><input id="enick" value="${esc(s.nick)}"></div>
-        <div><label>เบอร์โทร</label><input id="ephone" value="${esc(s.phone)}"></div>
-        <div><label>ราคาคอร์ส (หลังหักส่วนลดแล้ว)</label><input id="eprice" type="number" value="${+s.price || 0}"></div>
-      </div>
-      <button class="primary" onclick="saveEdit('${s.id}')" style="margin-top:16px">บันทึกข้อมูล</button>
-    </div>
-  `;
-}
-
-async function saveEdit(id) {
-  const s = STUDENTS.find(x => x.id === id);
-  if (!s) return;
-  s.first = \$("efirst").value;
-  s.last = \$("elast").value;
-  s.nick = \$("enick").value;
-  s.phone = \$("ephone").value;
-  s.price = \$("eprice").value;
-
-  try {
-    await api("save", { s });
-    toast("บันทึกข้อมูลแล้ว");
-    backToHome();
-  } catch (err) {
-    toast("เกิดข้อผิดพลาด: " + err.message);
-  }
-}
-
-async function exportDriveSheet() {
-  toast("กำลังสร้าง Google Sheet ใน Drive...");
-  const sheets = [
-    {
-      name: "ภาพรวมนักเรียน",
-      rows: [
-        ["ชื่อ", "นามสกุล", "ชื่อเล่น", "เบอร์โทร", "ราคาคอร์ส"],
-        ...STUDENTS.map(s => [s.first, s.last, s.nick, s.phone, +s.price || 0])
-      ]
-    }
-  ];
-
-  STUDENTS.forEach(s => {
-    sheets.push({
-      name: `TCAS-${(s.nick || s.first).slice(0, 15)}`,
-      rows: [["วิชา", "สถานะ"], ["คณิตศาสตร์", "ตามแผน"]]
-    });
-    sheets.push({
-      name: `ม.ปลาย-${(s.nick || s.first).slice(0, 15)}`,
-      rows: [["วิชา", "สถานะ"], ["ฟิสิกส์", "ตามแผน"]]
-    });
   });
+  return wb;
+}
 
-  try {
-    const res = await api("sheet", { title: "TCAS Report", sheets });
-    alert("สร้างสำเร็จ! เปิด Google Sheet ได้ที่:\n" + res.url);
-  } catch (err) {
-    toast("สร้างไม่สำเร็จ: " + err.message);
+function showLink(url){const d=$("dlg");d.innerHTML=`<div class="dbox"><p>สร้าง Google Sheet ใน Drive แล้ว</p><p><a href="\${esc(url)}" target="_blank">เปิด Google Sheet</a></p><button class="primary" onclick="\$('dlg').hidden=true">ปิด</button></div>`;d.hidden=false}
+function mkSheet(wb,title){const sheets=wb.SheetNames.map(n=>({name:n,rows:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:""})}));toast("กำลังสร้าง Google Sheet…");
+  api("sheet",{title,sheets}).then(r=>showLink(r.url)).catch(e=>toast("สร้างไม่สำเร็จ"))}
+
+function visible(){let L=S;if(mode==="shared"&&hv==="mine")L=L.filter(x=>x.staffId===ME.id);if(sf!=="")L=L.filter(x=>(x.staffId||"")===(sf==="-"?"":sf));return L}
+
+function render(){
+  $("who").innerHTML=whoHtml();
+  const st=S.find(s=>s.id===cur);
+  $("home").hidden=!!st;$("detail").hidden=!st;
+  if(st){$("detail").innerHTML=detailHtml(st)}else{cur=null;home()}
+}
+
+function home(){
+  const sh=mode==="shared",V=visible();
+  const totalPriceSum = V.reduce((sum, x) => sum + (+x.price || 0), 0);
+  const tabs=sh&&ME.owner?`<div class="tabs"><button data-hv="mine" class="\${hv==="mine"?"on":""}">🙋 นักเรียนของฉัน</button><button data-hv="all" class="${hv==="all"?"on":""}">👥 นักเรียนทั้งหมด (${S.length})</button><button data-hv="staff" class="\${hv==="staff"?"on":""}">🧑‍💼 Sub user ทั้งหมด</button></div>`:"";
+  const head=`<h1>🎓 ติดตามนักเรียนที่สมัครคอร์ส</h1>\${tabs}`;
+  
+  if(sh&&hv==="staff"&&ME.owner){$("home").innerHTML=head+`<section class="panel"><h2>🧑‍🏫 Dashboard Sub user</h2>\${staffCards()}</section>`;return}
+  
+  $("home").innerHTML=head+`<div class="stats">
+    <div class="stat hero"><b>\${V.length} คน</b><span>นักเรียนทั้งหมด</span></div>
+    <div class="stat"><b style="color:var(--ok)">฿\${totalPriceSum.toLocaleString()}</b><span>สรุปยอดขายรวมทั้งแผน</span></div>
+  </div>
+  <div class="tb">
+    <input id="q" type="search" placeholder="ค้นหาชื่อนักเรียน..." value="\${esc(q)}">
+    <button class="primary" id="add">+ เพิ่มนักเรียน</button>
+    <button id="gsheetAll">📗 สร้าง Google Sheet ใน Drive ของฉัน</button>
+  </div>
+  <section class="panel"><div class="scroll" id="tbl"></div></section>`;
+  table();
+}
+
+function table(){
+  const t=q.trim().toLowerCase();
+  const rows=visible().filter(r=>!t||[r.first,r.last,r.nick,r.phone,r.ondy].join(" ").toLowerCase().includes(t));
+  $("tbl").innerHTML=rows.length?`<table><thead><tr><th>ชื่อ-สกุล</th><th>พนักงานดูแล</th><th>ราคาคอร์ส</th><th>รุ่น</th><th>แผน vs จริง</th><th>สถานะ</th></tr></thead><tbody>`+rows.map(s=>{
+    const a=agg(s,null,null);
+    const alertTag = needsAlert(s) ? `<span class="alert-badge">🔔 ต้องติดตาม</span>` : ``;
+    return`<tr class="rw"><td><div class="nmc">${av(s,36)}<div><button class="lnk" data-open="${s.id}">${esc(nm(s))||"(ยังไม่ใส่ชื่อ)"}</button>${alertTag}</div></div></td><td>${esc(sn(s))}</td><td>฿${(+s.price||0).toLocaleString()}</td><td>${esc(s.batch)}</td>
+    <td>${chip(a)}</td><td>${dueTxt(s)}</td></tr>`}).join("")+`</tbody>`:`<p class="sub">ยังไม่มีนักเรียน</p>`;
+}
+
+function detailHtml(st){
+  const F=(k,l,type="text",ph="")=>`<div><label class="l" for="f_${k}">${l}</label><input id="f_${k}" type="${type}" data-f="${k}" value="${esc(st[k])}" placeholder="${ph}"></div>`;
+  return`<div class="tb"><button id="back">← กลับไปรายชื่อ</button><button id="gsheet" class="primary">📗 สร้าง Google Sheet ใน Drive ของฉัน</button></div>
+  <div class="nmc" style="margin-bottom:16px">${av(st,60)}<div><h1>${esc(nm(st))||"นักเรียนใหม่"}${needsAlert(st)?'<span class="alert-badge">🔔 สัปดาห์นี้ต้องได้รับการติดตาม</span>':''}</h1></div></div>
+  <section class="panel"><h2>🧸 ข้อมูลนักเรียน</h2><div class="fg f">${F("first","ชื่อ")}${F("last","สกุล")}${F("nick","ชื่อเล่น")}${F("phone","เบอร์โทร")}${F("price","ราคาคอร์ส (หลังหักส่วนลดแล้ว) - บาท","number")}</div></section>`;
+}
+
+/* events */
+document.addEventListener("click",e=>{
+  const el=e.target.closest("button");if(!el)return;
+  if(el.id==="doLogin")doLogin();
+  else if(el.id==="logout")logout();
+  else if(el.id==="refresh"){pull(false).then(()=>render())}
+  else if(el.id==="addsub"){
+    const n=(\$("newsub").value||"").trim();if(!n)return toast("ใส่ชื่อก่อน");
+    api("addUser",{name:n}).then(r=>{alert("รหัสเข้าใช้: "+r.code);return loadUsers()}).then(()=>render());
+  }
+  else if(el.dataset.du){
+    if(confirm("ยืนยันลบ Sub user?")) api("delUser",{id:el.dataset.du}).then(()=>loadUsers()).then(()=>render());
+  }
+  else if(el.dataset.open){cur=el.dataset.open;render();}
+  else if(el.id==="back"){cur=null;render();}
+  else if(el.id==="add"){
+    const s=blank();S.push(s);save(s,true);cur=s.id;render();
+  }
+  else if(el.id==="gsheet"){const st=S.find(x=>x.id===cur);if(st)mkSheet(wbAllList([st]),"รายงาน "+(st.first||"นักเรียน")+" "+TODAY)}
+  else if(el.id==="gsheetAll"){mkSheet(wbAllList(visible()),"ภาพรวมนักเรียน "+TODAY)}
+  else if(el.dataset.hv){hv=el.dataset.hv;sf="";render()}
+});
+
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.id==="q"){q=el.value;table();return}
+  const st=S.find(s=>s.id===cur);if(!st||!el.dataset.f)return;
+  st[el.dataset.f]=el.value;save(st,false);
+});
+
+async function init(){
+  const url=apiUrl(), tok=localStorage.getItem("tcas-token");
+  if(url&&tok){
+    TOKEN=tok;
+    try{const m=await api("me");await enter(m);}catch(e){logout()}
   }
 }
-
-function backToHome() {
-  \$("detail").hidden = true;
-  \$("home").hidden = false;
-  renderHome();
-}
-
-function logout() {
-  localStorage.removeItem("tcas-token");
-  TOKEN = "";
-  \$("home").hidden = true;
-  \$("login").hidden = false;
-  \$("code").value = "";
-  \$("who").innerHTML = "";
-}
-
-if (TOKEN && API_URL) {
-  api("me").then(me => {
-    ME = me;
-    \$("login").hidden = true;
-    \$("home").hidden = false;
-    loadData();
-  }).catch(() => {
-    logout();
-  });
-}
+init();
 </script>
 </body>
 </html>
