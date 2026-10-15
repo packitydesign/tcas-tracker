@@ -4,116 +4,257 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>TCAS Tracker</title>
-<meta name="theme-color" content="#0b7f86"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b7f86">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f3f6f9;--surface:#fff;--ink:#17233b;--muted:#5d6b82;--line:#d9e0ea;--accent:#0b7f86;--accent-soft:#d8f0f1;--ok:#1b7f4b;--ok-soft:#dcf3e5;--warn:#9a6a00;--warn-soft:#fbefc9;--bad:#b3304f;--bad-soft:#fadde4;--plan:#aab6c8;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1626;--surface:#162135;--ink:#e8eef8;--muted:#9aa9c2;--line:#2a3854;--accent:#45c3ca;--accent-soft:#12363a;--ok:#5fd397;--ok-soft:#14352a;--warn:#f0c14b;--warn-soft:#3b3014;--bad:#f07a98;--bad-soft:#401b28;--plan:#4a5a78}}
-:root[data-theme="dark"]{--bg:#0e1626;--surface:#162135;--ink:#e8eef8;--muted:#9aa9c2;--line:#2a3854;--accent:#45c3ca;--accent-soft:#12363a;--ok:#5fd397;--ok-soft:#14352a;--warn:#f0c14b;--warn-soft:#3b3014;--bad:#f07a98;--bad-soft:#401b28;--plan:#4a5a78}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+:root{--bg:#f6f8fc;--surface:#fff;--ink:#17233b;--muted:#5d6b82;--line:#e4e9f2;--accent:#0b7f86;--accent-soft:#e0f5f3;--ok:#1b7f4b;--ok-soft:#dcf3e5;--warn:#9a6a00;--warn-soft:#fbefc9;--bad:#b3304f;--bad-soft:#fadde4;--plan:#aab6c8;--sh:0 1px 2px rgba(23,35,59,.05),0 8px 24px rgba(23,35,59,.06)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 "IBM Plex Sans Thai",system-ui,sans-serif}
-main{max-width:1040px;margin:0 auto;padding:20px 16px 48px}
-h1{font-size:1.5rem;margin:0 0 4px}h2{font-size:1.1rem;margin:0 0 10px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 "Prompt","IBM Plex Sans Thai",sans-serif}
+main{max-width:1080px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.5rem;margin:0 0 4px}
 .sub{color:var(--muted);margin:0 0 16px}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:var(--sh)}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
-.stat b{display:block;font-size:1.9rem;line-height:1.2}.stat span{color:var(--muted);font-size:.9rem}
-.stat.hero{background:var(--accent-soft);border-color:var(--accent)}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--sh)}
+.stat b{display:block;font-size:1.6rem;line-height:1.2}.stat span{color:var(--muted);font-size:.85rem}
 .scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:560px}
-th,td{padding:7px 6px;text-align:left;border-bottom:1px solid var(--line);font-size:.94rem}
-th{color:var(--muted);font-weight:500;font-size:.85rem}
-.chip{display:inline-block;padding:1px 10px;border-radius:99px;font-size:.82rem;font-weight:500;white-space:nowrap}
-.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.bad{background:var(--bad-soft);color:var(--bad)}.chip.wait{background:var(--warn-soft);color:var(--warn)}
-.alert-badge{background:var(--bad-soft);color:var(--bad);padding:2px 8px;border-radius:12px;font-size:.78rem;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-left:6px;animation:pulse 2s infinite}
-@keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; transform: scale(1.03); } 100% { opacity: 0.8; } }
-.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--accent)}
-button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 14px;border-radius:6px}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);font-size:.92rem}
+th{color:var(--muted);font-weight:500;font-size:.82rem}
+.chip{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.8rem;font-weight:500}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.alert-badge{background:var(--bad-soft);color:var(--bad);padding:2px 8px;border-radius:12px;font-size:.78rem;font-weight:600;margin-left:6px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 16px;border-radius:999px;transition:all .15s}
 button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
-textarea{width:100%;min-height:130px;font:inherit;font-size:.9rem;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.f input,.f textarea,.f select{width:100%;font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
-.lnk{border:none;background:none;padding:0;font-weight:600;color:var(--accent);text-align:left}
-tr.rw:hover{background:var(--accent-soft)}
-.tb{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px}.tb input{flex:1;min-width:200px;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
-.mode{font-size:.85rem;color:var(--muted)}.dng{color:var(--bad)}
-[hidden]{display:none!important}.tabs{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap}.tabs button{padding:9px 18px;font-weight:600}.tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-#dlg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:30}.dbox{background:var(--surface);color:var(--ink);padding:18px;border-radius:10px;max-width:420px;width:90%}.av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;overflow:hidden;background:var(--accent-soft);color:var(--accent);font-weight:600;flex:none}.av img{width:100%;height:100%;object-fit:cover;display:block}
-.btnl{display:inline-block;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 12px;border-radius:6px;font-size:.9rem}#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.9rem;z-index:20;max-width:90vw}#toast:empty{display:none}
-
-:root{--bg:#f6f8fc;--line:#e4e9f2;--accent-soft:#e0f5f3;--r:16px;--sh:0 1px 2px rgba(23,35,59,.05),0 8px 24px rgba(23,35,59,.06)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1727;--line:#27344f;--sh:0 8px 24px rgba(0,0,0,.25)}}
-:root[data-theme="dark"]{--bg:#0f1727;--line:#27344f;--sh:0 8px 24px rgba(0,0,0,.25)}
-body{font-family:"Prompt","IBM Plex Sans Thai",system-ui,sans-serif;line-height:1.65;background:radial-gradient(900px 320px at 8% -8%,var(--accent-soft),transparent 65%),var(--bg)}
-main{max-width:1080px}
-h1{font-size:1.7rem;font-weight:600}
-.panel,.stat,.cd{border-radius:var(--r);box-shadow:var(--sh)}
-button,.btnl{border-radius:999px;padding:7px 16px}
-.sm{padding:3px 12px}
-#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:40;padding:16px;overflow:auto}
-.lbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:22px;width:100%;max-width:400px}
+.f input,.f select,.f textarea{width:100%;font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.tb{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px}.tb input{flex:1;min-width:200px;font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+[hidden]{display:none!important}
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:40;padding:16px}
+.lbox{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh);padding:24px;width:100%;max-width:400px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.9rem;z-index:50}
+#toast:empty{display:none}
 </style>
 </head>
 <body>
 <main>
-<div id="login"><div class="lbox"><h1>🎓 TCAS Tracker</h1><p class="sub" style="margin:0 0 14px">เข้าสู่ระบบด้วยรหัสผู้ใช้ (Main user หรือ Sub user)</p>
-<div id="urlbox" class="f" style="margin-bottom:10px"><label class="l" for="apiurl">Web app URL</label><input id="apiurl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div>
-<div class="f"><label class="l" for="code">รหัสผู้ใช้</label><input id="code" type="password" autocomplete="current-password" placeholder="รหัสที่ได้รับ"></div>
-<button class="primary" id="doLogin" style="width:100%;margin-top:14px">เข้าสู่ระบบ</button>
-<p id="lerr" class="src" style="margin:10px 0 0;color:var(--bad)"></p></div></div>
-<div id="msg" class="mode"></div><div id="toast" role="status"></div><div id="dlg" hidden></div>
-<div id="who"></div>
-<div id="home"></div>
+<div id="login">
+  <div class="lbox">
+    <h1>🎓 TCAS Tracker</h1>
+    <p class="sub">เข้าสู่ระบบด้วยรหัสผู้ใช้</p>
+    <div id="urlbox" class="f" style="margin-bottom:12px">
+      <label style="font-size:.85rem;color:var(--muted)">Web app URL</label>
+      <input id="apiurl" placeholder="https://script.google.com/macros/s/…/exec">
+    </div>
+    <div class="f" style="margin-bottom:16px">
+      <label style="font-size:.85rem;color:var(--muted)">รหัสผู้ใช้</label>
+      <input id="code" type="password" placeholder="กรอกรหัสที่ได้รับ">
+    </div>
+    <button class="primary" id="doLogin" style="width:100%">เข้าสู่ระบบ</button>
+    <p id="lerr" style="margin:10px 0 0;font-size:.85rem;color:var(--bad)"></p>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="who" style="margin-bottom:12px;font-size:.9rem;color:var(--muted)"></div>
+<div id="home" hidden></div>
 <div id="detail" hidden></div>
 </main>
-<script>
-const APP_VERSION="2026-10-15.2";
-const \$=id=>document.getElementById(id);
 
-function init(){
-  const apiUrl = localStorage.getItem("tcas-api") || "";
-  if(apiUrl){
-    \$("apiurl").value = apiUrl;
+<script>
+let API_URL = localStorage.getItem("tcas-api") || "";
+let TOKEN = localStorage.getItem("tcas-token") || "";
+let ME = null;
+let STUDENTS = [];
+
+const \$ = id => document.getElementById(id);
+const esc = s => String(s || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function toast(msg) {
+  const t = \$("toast");
+  t.textContent = msg;
+  setTimeout(() => { t.textContent = ""; }, 3000);
+}
+
+if (API_URL) \$("apiurl").value = API_URL;
+
+async function api(action, params = {}) {
+  const url = \$("apiurl").value.trim() || API_URL;
+  if (!url) throw new Error("กรุณากรอก Web app URL");
+  const res = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify(Object.assign({ a: action, t: TOKEN }, params))
+  });
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
+  return json.data;
+}
+
+\$("doLogin").onclick = async () => {
+  const url = \$("apiurl").value.trim();
+  const code = \$("code").value.trim();
+  \$("lerr").textContent = "";
+
+  if (!url) return \$("lerr").textContent = "กรุณากรอก Web app URL";
+  if (!code) return \$("lerr").textContent = "กรุณากรอกรหัสผู้ใช้";
+
+  try {
+    \$("lerr").textContent = "กำลังตรวจสอบรหัส...";
+    localStorage.setItem("tcas-api", url);
+    API_URL = url;
+
+    const data = await api("login", { code });
+    TOKEN = data.token;
+    ME = data.me;
+    localStorage.setItem("tcas-token", TOKEN);
+
+    \$("login").hidden = true;
+    \$("home").hidden = false;
+    toast("เข้าสู่ระบบสำเร็จ");
+    loadData();
+  } catch (err) {
+    \$("lerr").textContent = err.message === "invalid" ? "รหัสผู้ใช้ไม่ถูกต้อง" : err.message;
+  }
+};
+
+async function loadData() {
+  try {
+    const data = await api("list", { since: 0 });
+    STUDENTS = data.students || [];
+    renderHome();
+  } catch (err) {
+    toast("โหลดข้อมูลไม่สำเร็จ: " + err.message);
   }
 }
 
-\$("doLogin").onclick = function(){
-  const url = \$("apiurl").value.trim();
-  const code = \$("code").value.trim();
-  if(!url){
-    \$("lerr").textContent = "กรุณากรอก Web app URL";
-    return;
-  }
-  if(!code){
-    \$("lerr").textContent = "กรุณากรอกรหัสผู้ใช้";
-    return;
-  }
-  localStorage.setItem("tcas-api", url);
-  \$("lerr").textContent = "กำลังเข้าสู่ระบบ...";
+function renderHome() {
+  \$("who").innerHTML = `ผู้ใช้งาน: <b>${esc(ME.name)}</b> (${ME.role === "main" ? "Main User" : "Sub User"}) | <button onclick="logout()" style="padding:2px 10px;font-size:.8rem">ออกจากระบบ</button>`;
   
-  fetch(url, {
-    method: "POST",
-    body: JSON.stringify({ a: "login", code: code })
-  })
-  .then(res => res.json())
-  .then(res => {
-    if(res.ok){
-      \$("login").hidden = true;
-      \$("home").innerHTML = `<div class="panel"><h1>สวัสดีคุณ ${res.data.me.name}</h1><p>เข้าสู่ระบบเรียบร้อยแล้ว</p></div>`;
-    } else {
-      \$("lerr").textContent = "เกิดข้อผิดพลาด: " + (res.error || "รหัสไม่ถูกต้อง");
-    }
-  })
-  .catch(err => {
-    \$("lerr").textContent = "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ ตรวจสอบ URL อีกครั้ง";
-  });
-};
+  const totalPrice = STUDENTS.reduce((sum, s) => sum + (+s.price || 0), 0);
+  
+  \$("home").innerHTML = `
+    <h1>🎓 ติดตามนักเรียนที่สมัครคอร์ส</h1>
+    <div class="stats">
+      <div class="stat"><b>${STUDENTS.length} คน</b><span>นักเรียนทั้งหมด</span></div>
+      <div class="stat"><b style="color:var(--ok)">฿${totalPrice.toLocaleString()}</b><span>ยอดขายรวม</span></div>
+    </div>
+    <div class="panel">
+      <div class="tb">
+        <input id="q" placeholder="ค้นหาชื่อนักเรียน..." oninput="filterTable()">
+        <button class="primary" onclick="addStudent()">+ เพิ่มนักเรียน</button>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th>ชื่อ-สกุล</th><th>เบอร์โทร</th><th>รุ่น</th><th>ราคาคอร์ส</th><th>จัดการ</th></tr>
+          </thead>
+          <tbody id="stbody">
+            ${renderTableRows(STUDENTS)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
 
-init();
+function renderTableRows(list) {
+  if (!list.length) return `<tr><td colspan="5" style="text-align:center;color:var(--muted)">ยังไม่มีข้อมูลนักเรียน</td></tr>`;
+  return list.map(s => `
+    <tr>
+      <td><b>${esc(s.first)} ${esc(s.last)}</b> (${esc(s.nick || "-")})</td>
+      <td>${esc(s.phone || "-")}</td>
+      <td>${esc(s.batch || "-")}</td>
+      <td>฿${(+s.price || 0).toLocaleString()}</td>
+      <td><button onclick="editStudent('${s.id}')" style="padding:3px 10px;font-size:.8rem">ดู/แก้ไข</button></td>
+    </tr>
+  `).join("");
+}
+
+function filterTable() {
+  const q = \$("q").value.toLowerCase();
+  const filtered = STUDENTS.filter(s => (s.first + s.last + s.nick).toLowerCase().includes(q));
+  \$("stbody").innerHTML = renderTableRows(filtered);
+}
+
+async function addStudent() {
+  const first = prompt("กรอกชื่อนักเรียน:");
+  if (!first) return;
+  const newSt = { id: "s" + Date.now().toString(36), first: first, last: "", nick: "", price: 0, batch: "DEK71" };
+  try {
+    await api("save", { s: newSt });
+    STUDENTS.push(newSt);
+    renderHome();
+    toast("เพิ่มนักเรียนเรียบร้อย");
+  } catch (err) {
+    toast("บันทึกไม่สำเร็จ: " + err.message);
+  }
+}
+
+function editStudent(id) {
+  const s = STUDENTS.find(x => x.id === id);
+  if (!s) return;
+  \$("home").hidden = true;
+  \$("detail").hidden = false;
+  
+  \$("detail").innerHTML = `
+    <button onclick="backToHome()">← กลับหน้ารายชื่อ</button>
+    <div class="panel" style="margin-top:12px">
+      <h2>แก้ไขข้อมูล: ${esc(s.first)}</h2>
+      <div class="f" style="display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+        <div><label>ชื่อ</label><input id="efirst" value="${esc(s.first)}"></div>
+        <div><label>นามสกุล</label><input id="elast" value="${esc(s.last)}"></div>
+        <div><label>ชื่อเล่น</label><input id="enick" value="${esc(s.nick)}"></div>
+        <div><label>เบอร์โทร</label><input id="ephone" value="${esc(s.phone)}"></div>
+        <div><label>ราคาคอร์ส (บาท)</label><input id="eprice" type="number" value="${+s.price || 0}"></div>
+      </div>
+      <button class="primary" onclick="saveEdit('${s.id}')" style="margin-top:16px">บันทึกข้อมูล</button>
+    </div>
+  `;
+}
+
+async function saveEdit(id) {
+  const s = STUDENTS.find(x => x.id === id);
+  if (!s) return;
+  s.first = \$("efirst").value;
+  s.last = \$("elast").value;
+  s.nick = \$("enick").value;
+  s.phone = \$("ephone").value;
+  s.price = \$("eprice").value;
+
+  try {
+    await api("save", { s });
+    toast("บันทึกข้อมูลแล้ว");
+    backToHome();
+  } catch (err) {
+    toast("เกิดข้อผิดพลาด: " + err.message);
+  }
+}
+
+function backToHome() {
+  \$("detail").hidden = true;
+  \$("home").hidden = false;
+  renderHome();
+}
+
+function logout() {
+  localStorage.removeItem("tcas-token");
+  TOKEN = "";
+  \$("home").hidden = true;
+  \$("login").hidden = false;
+  \$("code").value = "";
+  \$("who").innerHTML = "";
+}
+
+// ตรวจสอบ Auto Login
+if (TOKEN && API_URL) {
+  api("me").then(me => {
+    ME = me;
+    \$("login").hidden = true;
+    \$("home").hidden = false;
+    loadData();
+  }).catch(() => {
+    logout();
+  });
+}
 </script>
 </body>
 </html>
