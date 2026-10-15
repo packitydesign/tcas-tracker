@@ -42,11 +42,11 @@ button:disabled{opacity:0.5;cursor:not-allowed}
     <h1>🎓 TCAS Tracker</h1>
     <p class="sub">เข้าสู่ระบบด้วยรหัสผู้ใช้ (Main user หรือ Sub user)</p>
     <div class="f" style="margin-bottom:12px">
-      <label style="font-size:.85rem;color:var(--muted)">Web app URL (ตั้งครั้งเดียว)</label>
+      <label for="apiurl" style="font-size:.85rem;color:var(--muted)">Web app URL (ตั้งครั้งเดียว)</label>
       <input id="apiurl" placeholder="https://script.google.com/macros/s/…/exec">
     </div>
     <div class="f" style="margin-bottom:16px">
-      <label style="font-size:.85rem;color:var(--muted)">รหัสผู้ใช้</label>
+      <label for="code" style="font-size:.85rem;color:var(--muted)">รหัสผู้ใช้</label>
       <input id="code" type="password" placeholder="รหัสที่ได้รับ">
     </div>
     <button class="primary" id="doLogin" style="width:100%">เข้าสู่ระบบ</button>
@@ -252,7 +252,7 @@ function editStudent(id) {
       "<div class=\"f\" style=\"display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))\">" +
         "<div><label>ชื่อ</label><input id=\"efirst\" value=\"" + esc(s.first) + "\"></div>" +
         "<div><label>นามสกุล</label><input id=\"elast\" value=\"" + esc(s.last) + "\"></div>" +
-        "<div><label>ชื่อเล่น</label><input id="enick\" value=\"" + esc(s.nick) + "\"></div>" +
+        "<div><label>ชื่อเล่น</label><input id=\"enick\" value=\"" + esc(s.nick) + "\"></div>" +
         "<div><label>เบอร์โทร</label><input id=\"ephone\" value=\"" + esc(s.phone) + "\"></div>" +
         "<div><label>ราคาคอร์ส (บาท)</label><input id=\"eprice\" type=\"number\" value=\"" + (+s.price || 0) + "\"></div>" +
       "</div>" +
