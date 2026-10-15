@@ -165,7 +165,7 @@ const fd=s=>s?D0(s).toLocaleDateString("th-TH",{day:"numeric",month:"short",year
 const LS="tcas-students-v1";
 const BATCHES=Array.from({length:11},(_,i)=>"DEK"+(71+i));
 let tab="comp",hv="all",sf="",editName=false,seenSet=false,STAFF=[],ME={id:"",owner:true,reg:true,name:"",joined:""},lastId=null,S=[],cur=null,db=null,readOnly=false,typing=false,q="",mode="local";
-const nm=s=>[s.first,s.last].filter(Boolean).join(" ")+(s.nick?` (${s.nick})`:"");
+const nm=s=>[s.first,s.last].filter(Boolean).join(" ")+(s.nick?` (\${s.nick})`:"");
 
 function blank(){const subj={};SUBJ.forEach(s=>subj[s]={on:false,t:[1,1],enr:TODAY,start:TODAY,end:"",ustart:"",uend:""});
   return{id:"s"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),first:"",last:"",nick:"",ondy:"",photo:"",phone:"",school:"",uni:"",faculty:"",batch:"DEK71",note:"",price:"",subj,w:{},wk:{},wp:{},hp:{},hw:{},hwk:{},hwp:{},cn:{},staffId:"",staffName:""}}
@@ -233,24 +233,39 @@ function needsAlert(st) {
   return false;
 }
 
-function packCard(st,p){const x=hpInfo(st,p),r=(st.hp||{})[p.k]||{};
-  const head=`<div class="cdh"><label style="cursor:pointer"><input type="checkbox" data-hp="${p.k}" data-k="on"${x?" checked":""}> <b>${esc(p.n)}</b></label>${p.term?`<span class="chip wait">${p.term}</span>`:""}</div><div class="src">รหัส ${p.k} · ${fh(p.h)} ชม. · อายุคอร์ส ${p.mo} เดือน</div>`;
-  if(!x)return`<div class="cd">${head}</div>`;
-  const cls=x.fin?"":x.days==null?"":x.days<0?" late":x.days<=30?" warn":"",tp=x.f==null?0:Math.round(x.f*100),hp=Math.round(x.done/x.total*100);
-  const dTxt=x.fin?"ครบแล้ว":x.days==null?"–":x.days<0?`เลย ${-x.days} วัน`:`${x.days} <small>วัน</small>`;
-  const pace=x.fin?"เรียนครบทุกเรื่องในแพ็คแล้ว":x.days==null?"ใส่วันที่สมัครเพื่อเริ่มนับถอยหลัง":x.days<=0?`หมดอายุแล้ว ยังเหลือ ${fh(x.rem)} ชม.`:`ต้องเรียนเฉลี่ย ${fh(x.rem/(x.days/7))} ชม./สัปดาห์ (${fh(x.rem/x.days)} ชม./วัน)`;
-  return`<div class="cd${cls}">${head}
-  <div class="f" style="display:flex;gap:8px;margin-top:8px"><div style="flex:1"><label class="l" for="e${p.k}">วันที่สมัคร</label><input id="e${p.k}" type="date" data-hp="${p.k}" data-k="enr" value="${esc(r.enr||"")}"></div><div style="width:96px"><label class="l" for="m${p.k}">อายุ (เดือน)</label><input id="m${p.k}" type="number" min="1" max="36" data-hp="${p.k}" data-k="mo" value="${r.mo||""}" placeholder="${p.mo}"></div></div>
-  <div class="f" style="display:flex;gap:8px;margin-top:6px"><div style="flex:1"><label class="l" for="s${p.k}">เริ่มเรียนตามแผน</label><input id="s${p.k}" type="date" data-hp="${p.k}" data-k="ps" value="${esc(r.ps||"")}"></div><div style="flex:1"><label class="l" for="d${p.k}">ต้องจบตามแผน</label><input id="d${p.k}" type="date" data-hp="${p.k}" data-k="pe" value="${esc(r.pe||"")}"></div></div>
-  <div class="src">เว้นว่าง = เริ่มวันที่สมัคร และจบวันหมดอายุคอร์ส</div>
-  <div class="cdr"><span>เหลือเวลา</span><b${x.days!=null&&x.days<0&&!x.fin?' class="dng"':""}>${dTxt}</b></div>
-  <div class="bar"><i style="width:${tp}%;background:var(--plan)"></i></div><div class="src">ใช้เวลาไปแล้ว ${x.f==null?"–":tp+"%"} · หมดอายุ ${fd(x.exp)}</div>
-  <div class="cdr"><span>เหลือชั่วโมง</span><b>${fh(x.rem)} <small>ชม.</small></b></div>
-  <div class="bar"><i style="width:${hp}%"></i></div><div class="src">เรียนแล้ว ${hp}% · ${fh(x.done)}/${fh(x.total)} ชม.</div>
-  <div class="src" style="margin-top:6px"><b>${pace}</b></div>
-  <div class="src">แผน ณ วันนี้ ${fh(x.plan)} ชม. · ${x.fin?'<span class="chip ok">ครบแล้ว</span>':chip(x)}</div>
-  <details data-s="p${p.k}" style="margin-top:8px"><summary style="padding:6px 8px;font-size:.9rem"><span>รายการเรียน (${p.it.length})</span><small>${fh(x.done)}/${fh(x.total)} ชม.</small></summary><div class="tk">`+
-  p.it.map(i=>{const w=Math.min(i.h,(st.hw||{})[i.c]||0),d=w>=i.h;return`<div class="item${d?" done":""}"><input type="checkbox" id="h${i.c}" data-hc="${i.c}"${d?" checked":""}><label for="h${i.c}">${i.c} ${esc(i.n)}</label><span class="m"><input class="w" type="number" min="0" max="${i.h}" step="0.5" value="${fh(w)}" data-hv="${i.c}" aria-label="ชั่วโมงที่เรียนแล้ว ${esc(i.n)}"> / ${fh(i.h)} ชม.</span></div>`}).join("")+`</div></details></div>`}
+function packCard(st, p) {
+  const x = hpInfo(st, p);
+  const r = (st.hp || {})[p.k] || {};
+  const termTag = p.term ? '<span class="chip wait">' + esc(p.term) + '</span>' : '';
+  const checkedAttr = x ? ' checked' : '';
+  const head = '<div class="cdh"><label style="cursor:pointer"><input type="checkbox" data-hp="' + p.k + '" data-k="on"' + checkedAttr + '> <b>' + esc(p.n) + '</b></label>' + termTag + '</div><div class="src">รหัส ' + p.k + ' · ' + fh(p.h) + ' ชม. · อายุคอร์ส ' + p.mo + ' เดือน</div>';
+  if (!x) return '<div class="cd">' + head + '</div>';
+  const cls = x.fin ? '' : (x.days == null ? '' : (x.days < 0 ? ' late' : (x.days <= 30 ? ' warn' : '')));
+  const tp = x.f == null ? 0 : Math.round(x.f * 100);
+  const hp = Math.round(x.done / x.total * 100);
+  const dTxt = x.fin ? 'ครบแล้ว' : (x.days == null ? '–' : (x.days < 0 ? ('เลย ' + (-x.days) + ' วัน') : (x.days + ' <small>วัน</small>')));
+  const pace = x.fin ? 'เรียนครบทุกเรื่องในแพ็คแล้ว' : (x.days == null ? 'ใส่วันที่สมัครเพื่อเริ่มนับถอยหลัง' : (x.days <= 0 ? ('หมดอายุแล้ว ยังเหลือ ' + fh(x.rem) + ' ชม.') : ('ต้องเรียนเฉลี่ย ' + fh(x.rem / (x.days / 7)) + ' ชม./สัปดาห์ (' + fh(x.rem / x.days) + ' ชม./วัน)')));
+  const dngClass = (x.days != null && x.days < 0 && !x.fin) ? ' class="dng"' : '';
+  const finChip = x.fin ? '<span class="chip ok">ครบแล้ว</span>' : chip(x);
+  const itemsHtml = p.it.map(function(i) {
+    const w = Math.min(i.h, (st.hw || {})[i.c] || 0);
+    const d = w >= i.h;
+    const itemDone = d ? ' done' : '';
+    const itemChecked = d ? ' checked' : '';
+    return '<div class="item' + itemDone + '"><input type="checkbox" id="h' + i.c + '" data-hc="' + i.c + '"' + itemChecked + '><label for="h' + i.c + '">' + i.c + ' ' + esc(i.n) + '</label><span class="m"><input class="w" type="number" min="0" max="' + i.h + '" step="0.5" value="' + fh(w) + '" data-hv="' + i.c + '" aria-label="ชั่วโมงที่เรียนแล้ว ' + esc(i.n) + '"> / ' + fh(i.h) + ' ชม.</span></div>';
+  }).join('');
+  return '<div class="cd' + cls + '">' + head +
+    '<div class="f" style="display:flex;gap:8px;margin-top:8px"><div style="flex:1"><label class="l" for="e' + p.k + '">วันที่สมัคร</label><input id="e' + p.k + '" type="date" data-hp="' + p.k + '" data-k="enr" value="' + esc(r.enr || "") + '"></div><div style="width:96px"><label class="l" for="m' + p.k + '">อายุ (เดือน)</label><input id="m' + p.k + '" type="number" min="1" max="36" data-hp="' + p.k + '" data-k="mo" value="' + (r.mo || "") + '" placeholder="' + p.mo + '"></div></div>' +
+    '<div class="f" style="display:flex;gap:8px;margin-top:6px"><div style="flex:1"><label class="l" for="s' + p.k + '">เริ่มเรียนตามแผน</label><input id="s' + p.k + '" type="date" data-hp="' + p.k + '" data-k="ps" value="' + esc(r.ps || "") + '"></div><div style="flex:1"><label class="l" for="d' + p.k + '">ต้องจบตามแผน</label><input id="d' + p.k + '" type="date" data-hp="' + p.k + '" data-k="pe" value="' + esc(r.pe || "") + '"></div></div>' +
+    '<div class="src">เว้นว่าง = เริ่มวันที่สมัคร และจบวันหมดอายุคอร์ส</div>' +
+    '<div class="cdr"><span>เหลือเวลา</span><b' + dngClass + '>' + dTxt + '</b></div>' +
+    '<div class="bar"><i style="width:' + tp + '%;background:var(--plan)"></i></div><div class="src">ใช้เวลาไปแล้ว ' + (x.f == null ? "–" : tp + "%") + ' · หมดอายุ ' + fd(x.exp) + '</div>' +
+    '<div class="cdr"><span>เหลือชั่วโมง</span><b>' + fh(x.rem) + ' <small>ชม.</small></b></div>' +
+    '<div class="bar"><i style="width:' + hp + '%"></i></div><div class="src">เรียนแล้ว ' + hp + '% · ' + fh(x.done) + '/' + fh(x.total) + ' ชม.</div>' +
+    '<div class="src" style="margin-top:6px"><b>' + pace + '</b></div>' +
+    '<div class="src">แผน ณ วันนี้ ' + fh(x.plan) + ' ชม. · ' + finChip + '</div>' +
+    '<details data-s="p' + p.k + '" style="margin-top:8px"><summary style="padding:6px 8px;font-size:.9rem"><span>รายการเรียน (' + p.it.length + ')</span><small>' + fh(x.done) + '/' + fh(x.total) + ' ชม.</small></summary><div class="tk">' + itemsHtml + '</div></details></div>';
+}
 
 function hsChart(st){const el=$("hc0");if(!el)return;const S2=hsubs(st);if(!S2.length){el.innerHTML="";return}
   const A=S2.map(s=>hsAgg(st,s)),mx=Math.max(1,...A.map(a=>Math.max(a.plan,a.done,a.total)))*1.1;
