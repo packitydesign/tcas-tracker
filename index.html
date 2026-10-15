@@ -11,28 +11,40 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 "Prompt","IBM Plex Sans Thai",sans-serif}
 main{max-width:1080px;margin:0 auto;padding:20px 16px 48px}
-h1{font-size:1.5rem;margin:0 0 4px}
+h1{font-size:1.5rem;margin:0 0 4px}h2{font-size:1.1rem;margin:0 0 10px}
 .sub{color:var(--muted);margin:0 0 16px}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:var(--sh)}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--sh)}
 .stat b{display:block;font-size:1.6rem;line-height:1.2}.stat span{color:var(--muted);font-size:.85rem}
+.stat.hero{background:var(--accent-soft);border-color:var(--accent)}
 .scroll{overflow-x:auto}
 table{width:100%;border-collapse:collapse;min-width:600px}
 th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);font-size:.92rem}
 th{color:var(--muted);font-weight:500;font-size:.82rem}
-.chip{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.8rem;font-weight:500}
-.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.bad{background:var(--bad-soft);color:var(--bad)}
-button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 16px;border-radius:999px;transition:all .15s}
+.chip{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.8rem;font-weight:500;white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.bad{background:var(--bad-soft);color:var(--bad)}.chip.wait{background:var(--warn-soft);color:var(--warn)}
+.alert-badge{background:var(--bad-soft);color:var(--bad);padding:2px 8px;border-radius:12px;font-size:.78rem;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-left:6px;animation:pulse 2s infinite}
+@keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; transform: scale(1.03); } 100% { opacity: 0.8; } }
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 16px;border-radius:999px;transition:all .15s}
 button.primary{background:var(--accent);color:#0e1626;border-color:var(--accent);font-weight:600}
 button:disabled{opacity:0.5;cursor:not-allowed}
 .f input,.f select,.f textarea{width:100%;font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
 .tb{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px}.tb input{flex:1;min-width:200px;font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+.tabs{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap}.tabs button{padding:8px 16px}.tabs button.on{background:var(--accent);color:#0e1626;border-color:var(--accent);font-weight:600}
 [hidden]{display:none!important}
 #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:40;padding:16px}
 .lbox{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh);padding:24px;width:100%;max-width:400px}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.9rem;z-index:50}
 #toast:empty{display:none}
+.user-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:12px}
+.user-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--sh)}
+.user-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.user-card-body{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.user-card-stat{background:var(--bg);padding:8px 12px;border-radius:8px;font-size:.85rem}
+.user-card-stat b{display:block;font-size:1.2rem;color:var(--ink)}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.lnk{border:none;background:none;padding:0;font-weight:600;color:var(--accent);text-align:left;cursor:pointer}
 </style>
 </head>
 <body>
@@ -50,7 +62,6 @@ button:disabled{opacity:0.5;cursor:not-allowed}
       <input id="code" type="password" placeholder="รหัสที่ได้รับ">
     </div>
     <button class="primary" id="doLogin" style="width:100%">เข้าสู่ระบบ</button>
-    <button id="doTest" style="width:100%;margin-top:8px">🔍 ทดสอบการเชื่อมต่อ</button>
     <p id="lerr" style="margin:10px 0 0;font-size:.85rem;color:var(--bad)"></p>
   </div>
 </div>
@@ -61,32 +72,30 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 <div id="detail" hidden></div>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 var API_URL = localStorage.getItem("tcas-api") || "";
 var TOKEN = localStorage.getItem("tcas-token") || "";
 var ME = null;
 var STUDENTS = [];
+var USERS = [];
+var hv = "all";
+var q = "";
+var cur = null;
 
-function $(id) {
-  return document.getElementById(id);
-}
-
-function esc(s) {
-  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-}
+function \$(id) { return document.getElementById(id); }
+function esc(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
 
 function toast(msg) {
-  var t = $("toast");
+  var t = \$("toast");
   t.textContent = msg;
   setTimeout(function() { t.textContent = ""; }, 3000);
 }
 
-if (API_URL) {
-  $("apiurl").value = API_URL;
-}
+if (API_URL) \$("apiurl").value = API_URL;
 
 function api(action, params) {
-  var url = $("apiurl").value.trim() || API_URL;
+  var url = \$("apiurl").value.trim() || API_URL;
   if (!url) return Promise.reject(new Error("กรุณากรอก Web app URL"));
   
   var payload = Object.assign({ a: action, t: TOKEN }, params || {});
@@ -102,48 +111,18 @@ function api(action, params) {
   });
 }
 
-$("doTest").onclick = function() {
-  var url = $("apiurl").value.trim();
-  if (!url) {
-    $("lerr").textContent = "กรุณากรอก URL ก่อนทดสอบ";
-    return;
-  }
-  $("lerr").style.color = "var(--ink)";
-  $("lerr").textContent = "กำลังทดสอบ...";
-  fetch(url)
-    .then(function(res) { return res.json(); })
-    .then(function(j) {
-      if (j.ok) {
-        $("lerr").style.color = "var(--ok)";
-        $("lerr").textContent = "✓ เชื่อมต่อ Google Apps Script สำเร็จ!";
-      } else {
-        throw new Error();
-      }
-    })
-    .catch(function() {
-      $("lerr").style.color = "var(--bad)";
-      $("lerr").textContent = "✗ ไม่สามารถเชื่อมต่อ URL นี้ได้ ตรวจสอบสิทธิ์สคริปต์";
-    });
-};
+\$("doLogin").onclick = function() {
+  var btn = \$("doLogin");
+  var url = \$("apiurl").value.trim();
+  var code = \$("code").value.trim();
+  \$("lerr").textContent = "";
 
-$("doLogin").onclick = function() {
-  var btn = $("doLogin");
-  var url = $("apiurl").value.trim();
-  var code = $("code").value.trim();
-  $("lerr").textContent = "";
-
-  if (!url) {
-    $("lerr").textContent = "กรุณากรอก Web app URL";
-    return;
-  }
-  if (!code) {
-    $("lerr").textContent = "กรุณากรอกรหัสผู้ใช้";
-    return;
-  }
+  if (!url) { \$("lerr").textContent = "กรุณากรอก Web app URL"; return; }
+  if (!code) { \$("lerr").textContent = "กรุณากรอกรหัสผู้ใช้"; return; }
 
   btn.disabled = true;
-  $("lerr").style.color = "var(--ink)";
-  $("lerr").textContent = "กำลังเข้าสู่ระบบ...";
+  \$("lerr").style.color = "var(--ink)";
+  \$("lerr").textContent = "กำลังเข้าสู่ระบบ...";
   
   localStorage.setItem("tcas-api", url);
   API_URL = url;
@@ -153,75 +132,123 @@ $("doLogin").onclick = function() {
       TOKEN = data.token;
       ME = data.me;
       localStorage.setItem("tcas-token", TOKEN);
-      $("login").hidden = true;
-      $("home").hidden = false;
+      \$("login").hidden = true;
+      \$("home").hidden = false;
       toast("เข้าสู่ระบบสำเร็จ");
       loadData();
     })
     .catch(function(err) {
-      $("lerr").style.color = "var(--bad)";
-      $("lerr").textContent = err.message === "invalid" ? "รหัสผู้ใช้ไม่ถูกต้อง" : err.message;
+      \$("lerr").style.color = "var(--bad)";
+      \$("lerr").textContent = err.message === "invalid" ? "รหัสผู้ใช้ไม่ถูกต้อง" : err.message;
     })
-    .then(function() {
-      btn.disabled = false;
-    });
+    .then(function() { btn.disabled = false; });
 };
 
 function loadData() {
   api("list", { since: 0 })
     .then(function(data) {
       STUDENTS = data.students || [];
-      renderHome();
+      if (ME.role === "main") {
+        return api("users").then(function(uData) { USERS = uData.users || []; });
+      }
     })
-    .catch(function(err) {
-      toast("โหลดข้อมูลไม่สำเร็จ: " + err.message);
-    });
+    .then(function() { renderHome(); })
+    .catch(function(err) { toast("โหลดข้อมูลไม่สำเร็จ: " + err.message); });
 }
 
 function renderHome() {
-  $("who").innerHTML = "ผู้ใช้งาน: <b>" + esc(ME.name) + "</b> (" + (ME.role === "main" ? "Main User" : "Sub User") + ") | <button onclick=\"logout()\" style=\"padding:2px 10px;font-size:.8rem\">ออกจากระบบ</button>";
+  \$("who").innerHTML = "ผู้ใช้งาน: <b>" + esc(ME.name) + "</b> (" + (ME.role === "main" ? "Main User" : "Sub User") + ") | <button onclick=\"logout()\" style=\"padding:2px 10px;font-size:.8rem\">ออกจากระบบ</button>";
   
   var totalPrice = STUDENTS.reduce(function(sum, s) { return sum + (+s.price || 0); }, 0);
+  
+  var tabs = ME.role === "main" ? 
+    "<div class=\"tabs\">" +
+      "<button class=\"" + (hv === "all" ? "on" : "") + "\" onclick=\"switchTab('all')\">👥 นักเรียนทั้งหมด (" + STUDENTS.length + ")</button>" +
+      "<button class=\"" + (hv === "staff" ? "on" : "") + "\" onclick=\"switchTab('staff')\">🧑‍💼 Sub user ทั้งหมด (" + USERS.length + ")</button>" +
+    "</div>" : "";
 
-  $("home").innerHTML = 
-    "<h1>🎓 ติดตามนักเรียนที่สมัครคอร์ส</h1>" +
+  if (ME.role === "main" && hv === "staff") {
+    renderStaffTab(tabs);
+    return;
+  }
+
+  \$("home").innerHTML = 
+    "<h1>🎓 ติดตามนักเรียนที่สมัครคอร์ส</h1>" + tabs +
     "<div class=\"stats\">" +
-      "<div class=\"stat\"><b>" + STUDENTS.length + " คน</b><span>นักเรียนทั้งหมด</span></div>" +
+      "<div class=\"stat hero\"><b>" + STUDENTS.length + " คน</b><span>นักเรียนทั้งหมด</span></div>" +
       "<div class=\"stat\"><b style=\"color:var(--ok)\">฿" + totalPrice.toLocaleString() + "</b><span>สรุปยอดขายรวม</span></div>" +
     "</div>" +
     "<div class=\"panel\">" +
       "<div class=\"tb\">" +
-        "<input id=\"q\" placeholder=\"ค้นหาชื่อนักเรียน...\" oninput=\"filterTable()\">" +
+        "<input id=\"q\" placeholder=\"ค้นหาชื่อนักเรียน...\" value=\"" + esc(q) + "\" oninput=\"filterTable()\">" +
         "<button class=\"primary\" onclick=\"addStudent()\">+ เพิ่มนักเรียน</button>" +
+        "<button onclick=\"exportDriveSheet()\">📗 สร้าง Google Sheet ใน Drive ของฉัน</button>" +
       "</div>" +
       "<div class=\"scroll\">" +
         "<table>" +
-          "<thead><tr><th>ชื่อ-สกุล</th><th>เบอร์โทร</th><th>รุ่น</th><th>ราคาคอร์ส</th><th>จัดการ</th></tr></thead>" +
+          "<thead><tr><th>ชื่อ-สกุล</th><th>เบอร์โทร</th><th>รุ่น</th><th>ราคาคอร์ส (หลังหักส่วนลด)</th><th>การติดตาม</th><th>จัดการ</th></tr></thead>" +
           "<tbody id=\"stbody\">" + renderTableRows(STUDENTS) + "</tbody>" +
         "</table>" +
       "</div>" +
     "</div>";
 }
 
+function renderStaffTab(tabs) {
+  var userCards = USERS.map(function(u) {
+    var uStudents = STUDENTS.filter(function(s) { return s.staffId === u.id; });
+    var uPrice = uStudents.reduce(function(sum, s) { return sum + (+s.price || 0); }, 0);
+    return "<div class=\"user-card\">" +
+      "<div class=\"user-card-head\">" +
+        "<b>" + esc(u.name) + "</b>" +
+        "<span class=\"chip " + (u.active ? "ok" : "bad") + "\">" + (u.active ? "เปิดใช้งาน" : "ปิดใช้งาน") + "</span>" +
+      "</div>" +
+      "<div class=\"user-card-body\">" +
+        "<div class=\"user-card-stat\"><span>นักเรียน</span><b>" + uStudents.length + " คน</b></div>" +
+        "<div class=\"user-card-stat\"><span>ยอดขาย</span><b style=\"color:var(--ok)\">฿" + uPrice.toLocaleString() + "</b></div>" +
+      "</div>" +
+      "<div style=\"display:flex;gap:6px\">" +
+        "<button class=\"dng\" onclick=\"delSubUser('" + u.id + "')\" style=\"padding:4px 10px;font-size:.8rem;color:var(--bad)\">🗑️ ลบ Sub user</button>" +
+      "</div>" +
+    "</div>";
+  }).join("");
+
+  \$("home").innerHTML = 
+    "<h1>🎓 ติดตามนักเรียนที่สมัครคอร์ส</h1>" + tabs +
+    "<div class=\"panel\">" +
+      "<h2>🧑‍🏫 Dashboard รายบุคคล Sub User</h2>" +
+      "<div style=\"margin-bottom:12px;display:flex;gap:8px\">" +
+        "<input id=\"newSubName\" placeholder=\"ชื่อ Sub user ใหม่\" style=\"padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)\">" +
+        "<button class=\"primary\" onclick=\"addSubUser()\">+ เพิ่ม Sub user</button>" +
+      "</div>" +
+      "<div class=\"user-card-grid\">" + (userCards || "<p class=\"sub\">ยังไม่มี Sub user ในระบบ</p>") + "</div>" +
+    "</div>";
+}
+
+function switchTab(tab) {
+  hv = tab;
+  renderHome();
+}
+
 function renderTableRows(list) {
-  if (!list.length) return "<tr><td colspan=\"5\" style=\"text-align:center;color:var(--muted)\">ยังไม่มีข้อมูลนักเรียน</td></tr>";
+  if (!list.length) return "<tr><td colspan=\"6\" style=\"text-align:center;color:var(--muted)\">ยังไม่มีข้อมูลนักเรียน</td></tr>";
   return list.map(function(s) {
     return "<tr>" +
-      "<td><b>" + esc(s.first) + " " + esc(s.last) + "</b> (" + esc(s.nick || "-") + ")</td>" +
+      "<td><button class=\"lnk\" onclick=\"editStudent('" + s.id + "')\"><b>" + esc(s.first) + " " + esc(s.last) + "</b> (" + esc(s.nick || "-") + ")</button></td>" +
       "<td>" + esc(s.phone || "-") + "</td>" +
       "<td>" + esc(s.batch || "-") + "</td>" +
       "<td>฿" + (+s.price || 0).toLocaleString() + "</td>" +
+      "<td><span class=\"alert-badge\">🔔 ต้องติดตามสัปดาห์นี้</span></td>" +
       "<td><button onclick=\"editStudent('" + s.id + "')\" style=\"padding:3px 10px;font-size:.8rem\">ดู/แก้ไข</button></td>" +
     "</tr>";
   }).join("");
 }
 
 function filterTable() {
-  var q = $("q").value.toLowerCase();
+  q = \$("q").value.toLowerCase();
   var filtered = STUDENTS.filter(function(s) {
     return (s.first + s.last + s.nick).toLowerCase().indexOf(q) !== -1;
   });
-  $("stbody").innerHTML = renderTableRows(filtered);
+  \$("stbody").innerHTML = renderTableRows(filtered);
 }
 
 function addStudent() {
@@ -234,78 +261,4 @@ function addStudent() {
       renderHome();
       toast("เพิ่มนักเรียนเรียบร้อย");
     })
-    .catch(function(err) {
-      toast("บันทึกไม่สำเร็จ: " + err.message);
-    });
-}
-
-function editStudent(id) {
-  var s = STUDENTS.find(function(x) { return x.id === id; });
-  if (!s) return;
-  $("home").hidden = true;
-  $("detail").hidden = false;
-  
-  $("detail").innerHTML = 
-    "<button onclick=\"backToHome()\">← กลับหน้ารายชื่อ</button>" +
-    "<div class=\"panel\" style=\"margin-top:12px\">" +
-      "<h2>แก้ไขข้อมูล: " + esc(s.first) + "</h2>" +
-      "<div class=\"f\" style=\"display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))\">" +
-        "<div><label>ชื่อ</label><input id=\"efirst\" value=\"" + esc(s.first) + "\"></div>" +
-        "<div><label>นามสกุล</label><input id=\"elast\" value=\"" + esc(s.last) + "\"></div>" +
-        "<div><label>ชื่อเล่น</label><input id=\"enick\" value=\"" + esc(s.nick) + "\"></div>" +
-        "<div><label>เบอร์โทร</label><input id=\"ephone\" value=\"" + esc(s.phone) + "\"></div>" +
-        "<div><label>ราคาคอร์ส (บาท)</label><input id=\"eprice\" type=\"number\" value=\"" + (+s.price || 0) + "\"></div>" +
-      "</div>" +
-      "<button class=\"primary\" onclick=\"saveEdit('" + s.id + "')\" style=\"margin-top:16px\">บันทึกข้อมูล</button>" +
-    "</div>";
-}
-
-function saveEdit(id) {
-  var s = STUDENTS.find(function(x) { return x.id === id; });
-  if (!s) return;
-  s.first = $("efirst").value;
-  s.last = $("elast").value;
-  s.nick = $("enick").value;
-  s.phone = $("ephone").value;
-  s.price = $("eprice").value;
-
-  api("save", { s: s })
-    .then(function() {
-      toast("บันทึกข้อมูลแล้ว");
-      backToHome();
-    })
-    .catch(function(err) {
-      toast("เกิดข้อผิดพลาด: " + err.message);
-    });
-}
-
-function backToHome() {
-  $("detail").hidden = true;
-  $("home").hidden = false;
-  renderHome();
-}
-
-function logout() {
-  localStorage.removeItem("tcas-token");
-  TOKEN = "";
-  $("home").hidden = true;
-  $("login").hidden = false;
-  $("code").value = "";
-  $("who").innerHTML = "";
-}
-
-if (TOKEN && API_URL) {
-  api("me")
-    .then(function(me) {
-      ME = me;
-      $("login").hidden = true;
-      $("home").hidden = false;
-      loadData();
-    })
-    .catch(function() {
-      logout();
-    });
-}
-</script>
-</body>
-</html>
+    .catch(function(err) { toast("บันทึกไม่สำเร็จ
