@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#0b7f86">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f8fc;--surface:#fff;--ink:#17233b;--muted:#5d6b82;--line:#e4e9f2;--accent:#0b7f86;--accent-soft:#e0f5f3;--ok:#1b7f4b;--ok-soft:#dcf3e5;--warn:#9a6a00;--warn-soft:#fbefc9;--bad:#b3304f;--bad-soft:#fadde4;--plan:#aab6c8;--sh:0 1px 2px rgba(23,35,59,.05),0 8px 24px rgba(23,35,59,.06)}
+:root{--bg:#f6f8fc;--surface:#fff;--ink:#17233b;--muted:#5d6b82;--line:#e4e9f2;--accent:#0b7f86;--accent-soft:#e0f5f3;--ok:#1b7f4b;--ok-soft:#dcf3e5;--warn:#9a6a00;--warn-soft:#fbefc9;--bad:#b3304f;--bad-soft:#fadde4;--sh:0 1px 2px rgba(23,35,59,.05),0 8px 24px rgba(23,35,59,.06)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 "Prompt","IBM Plex Sans Thai",sans-serif}
 main{max-width:1080px;margin:0 auto;padding:20px 16px 48px}
@@ -23,7 +23,8 @@ th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);font-
 th{color:var(--muted);font-weight:500;font-size:.82rem}
 .chip{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.8rem;font-weight:500}
 .chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.bad{background:var(--bad-soft);color:var(--bad)}
-.alert-badge{background:var(--bad-soft);color:var(--bad);padding:2px 8px;border-radius:12px;font-size:.78rem;font-weight:600;margin-left:6px}
+.alert-badge{background:var(--bad-soft);color:var(--bad);padding:2px 8px;border-radius:12px;font-size:.78rem;font-weight:600;margin-left:6px;animation:pulse 2s infinite}
+@keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; transform: scale(1.03); } 100% { opacity: 0.8; } }
 button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 16px;border-radius:999px;transition:all .15s}
 button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
 .f input,.f select,.f textarea{width:100%;font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
@@ -33,6 +34,12 @@ button.primary{background:var(--accent);color:#fff;border-color:var(--accent);fo
 .lbox{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh);padding:24px;width:100%;max-width:400px}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.9rem;z-index:50}
 #toast:empty{display:none}
+.user-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:12px}
+.user-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--sh)}
+.user-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.user-card-body{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.user-card-stat{background:var(--bg);padding:8px 12px;border-radius:8px;font-size:.85rem}
+.user-card-stat b{display:block;font-size:1.2rem;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -60,11 +67,13 @@ button.primary{background:var(--accent);color:#fff;border-color:var(--accent);fo
 <div id="detail" hidden></div>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 let API_URL = localStorage.getItem("tcas-api") || "";
 let TOKEN = localStorage.getItem("tcas-token") || "";
 let ME = null;
 let STUDENTS = [];
+let USERS = [];
 
 const \$ = id => document.getElementById(id);
 const esc = s => String(s || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -120,6 +129,10 @@ async function loadData() {
   try {
     const data = await api("list", { since: 0 });
     STUDENTS = data.students || [];
+    if (ME.role === "main") {
+      const uData = await api("users");
+      USERS = uData.users || [];
+    }
     renderHome();
   } catch (err) {
     toast("โหลดข้อมูลไม่สำเร็จ: " + err.message);
@@ -131,21 +144,57 @@ function renderHome() {
   
   const totalPrice = STUDENTS.reduce((sum, s) => sum + (+s.price || 0), 0);
   
+  let userSection = "";
+  if (ME.role === "main") {
+    const userCards = USERS.map(u => {
+      const uStudents = STUDENTS.filter(s => s.staffId === u.id);
+      const uPrice = uStudents.reduce((sum, s) => sum + (+s.price || 0), 0);
+      return `
+        <div class="user-card">
+          <div class="user-card-head">
+            <b>${esc(u.name)}</b>
+            <span class="chip ${u.active ? 'ok' : 'bad'}">${u.active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}</span>
+          </div>
+          <div class="user-card-body">
+            <div class="user-card-stat"><span>นักเรียน</span><b>${uStudents.length} คน</b></div>
+            <div class="user-card-stat"><span>ยอดขาย</span><b style="color:var(--ok)">฿${uPrice.toLocaleString()}</b></div>
+          </div>
+          <div style="display:flex;gap:4px">
+            <button onclick="delSubUser('${u.id}')" style="color:var(--bad);padding:3px 8px;font-size:.8rem">🗑️ ลบ Sub user</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    userSection = `
+      <div class="panel">
+        <h2>🧑‍🏫 Dashboard รายบุคคล Sub User</h2>
+        <div style="margin-bottom:10px;display:flex;gap:8px">
+          <input id="newSubName" placeholder="ชื่อ Sub user ใหม่" style="padding:6px 10px;border-radius:8px;border:1px solid var(--line)">
+          <button class="primary" onclick="addSubUser()">+ เพิ่ม Sub user</button>
+        </div>
+        <div class="user-card-grid">${userCards || '<p class="sub">ยังไม่มี Sub user</p>'}</div>
+      </div>
+    `;
+  }
+
   \$("home").innerHTML = `
     <h1>🎓 ติดตามนักเรียนที่สมัครคอร์ส</h1>
     <div class="stats">
       <div class="stat"><b>${STUDENTS.length} คน</b><span>นักเรียนทั้งหมด</span></div>
-      <div class="stat"><b style="color:var(--ok)">฿${totalPrice.toLocaleString()}</b><span>ยอดขายรวม</span></div>
+      <div class="stat"><b style="color:var(--ok)">฿${totalPrice.toLocaleString()}</b><span>สรุปยอดขายรวม</span></div>
     </div>
+    ${userSection}
     <div class="panel">
       <div class="tb">
         <input id="q" placeholder="ค้นหาชื่อนักเรียน..." oninput="filterTable()">
         <button class="primary" onclick="addStudent()">+ เพิ่มนักเรียน</button>
+        <button onclick="exportDriveSheet()">📗 สร้าง Google Sheet ใน Drive ของฉัน</button>
       </div>
       <div class="scroll">
         <table>
           <thead>
-            <tr><th>ชื่อ-สกุล</th><th>เบอร์โทร</th><th>รุ่น</th><th>ราคาคอร์ส</th><th>จัดการ</th></tr>
+            <tr><th>ชื่อ-สกุล</th><th>เบอร์โทร</th><th>รุ่น</th><th>ราคาคอร์ส (หลังหักส่วนลด)</th><th>การติดตาม</th><th>จัดการ</th></tr>
           </thead>
           <tbody id="stbody">
             ${renderTableRows(STUDENTS)}
@@ -157,13 +206,14 @@ function renderHome() {
 }
 
 function renderTableRows(list) {
-  if (!list.length) return `<tr><td colspan="5" style="text-align:center;color:var(--muted)">ยังไม่มีข้อมูลนักเรียน</td></tr>`;
+  if (!list.length) return `<tr><td colspan="6" style="text-align:center;color:var(--muted)">ยังไม่มีข้อมูลนักเรียน</td></tr>`;
   return list.map(s => `
     <tr>
       <td><b>${esc(s.first)} ${esc(s.last)}</b> (${esc(s.nick || "-")})</td>
       <td>${esc(s.phone || "-")}</td>
       <td>${esc(s.batch || "-")}</td>
       <td>฿${(+s.price || 0).toLocaleString()}</td>
+      <td><span class="alert-badge">🔔 ต้องติดตามสัปดาห์นี้</span></td>
       <td><button onclick="editStudent('${s.id}')" style="padding:3px 10px;font-size:.8rem">ดู/แก้ไข</button></td>
     </tr>
   `).join("");
@@ -189,6 +239,29 @@ async function addStudent() {
   }
 }
 
+async function addSubUser() {
+  const name = \$("newSubName").value.trim();
+  if (!name) return toast("กรอกชื่อ Sub user ก่อน");
+  try {
+    const res = await api("addUser", { name });
+    alert(`สร้าง Sub user เรียบร้อย\nรหัสเข้าใช้งานคือ: ${res.code}`);
+    loadData();
+  } catch (err) {
+    toast("เพิ่มไม่สำเร็จ: " + err.message);
+  }
+}
+
+async function delSubUser(id) {
+  if (!confirm("ยืนยันลบ Sub user คนนี้?")) return;
+  try {
+    await api("delUser", { id });
+    toast("ลบ Sub user เรียบร้อย");
+    loadData();
+  } catch (err) {
+    toast("ลบไม่สำเร็จ: " + err.message);
+  }
+}
+
 function editStudent(id) {
   const s = STUDENTS.find(x => x.id === id);
   if (!s) return;
@@ -204,7 +277,7 @@ function editStudent(id) {
         <div><label>นามสกุล</label><input id="elast" value="${esc(s.last)}"></div>
         <div><label>ชื่อเล่น</label><input id="enick" value="${esc(s.nick)}"></div>
         <div><label>เบอร์โทร</label><input id="ephone" value="${esc(s.phone)}"></div>
-        <div><label>ราคาคอร์ส (บาท)</label><input id="eprice" type="number" value="${+s.price || 0}"></div>
+        <div><label>ราคาคอร์ส (หลังหักส่วนลดแล้ว)</label><input id="eprice" type="number" value="${+s.price || 0}"></div>
       </div>
       <button class="primary" onclick="saveEdit('${s.id}')" style="margin-top:16px">บันทึกข้อมูล</button>
     </div>
@@ -229,6 +302,37 @@ async function saveEdit(id) {
   }
 }
 
+async function exportDriveSheet() {
+  toast("กำลังสร้าง Google Sheet ใน Drive...");
+  const sheets = [
+    {
+      name: "ภาพรวมนักเรียน",
+      rows: [
+        ["ชื่อ", "นามสกุล", "ชื่อเล่น", "เบอร์โทร", "ราคาคอร์ส"],
+        ...STUDENTS.map(s => [s.first, s.last, s.nick, s.phone, +s.price || 0])
+      ]
+    }
+  ];
+
+  STUDENTS.forEach(s => {
+    sheets.push({
+      name: `TCAS-${(s.nick || s.first).slice(0, 15)}`,
+      rows: [["วิชา", "สถานะ"], ["คณิตศาสตร์", "ตามแผน"]]
+    });
+    sheets.push({
+      name: `ม.ปลาย-${(s.nick || s.first).slice(0, 15)}`,
+      rows: [["วิชา", "สถานะ"], ["ฟิสิกส์", "ตามแผน"]]
+    });
+  });
+
+  try {
+    const res = await api("sheet", { title: "TCAS Report", sheets });
+    alert("สร้างสำเร็จ! เปิด Google Sheet ได้ที่:\n" + res.url);
+  } catch (err) {
+    toast("สร้างไม่สำเร็จ: " + err.message);
+  }
+}
+
 function backToHome() {
   \$("detail").hidden = true;
   \$("home").hidden = false;
@@ -244,7 +348,6 @@ function logout() {
   \$("who").innerHTML = "";
 }
 
-// ตรวจสอบ Auto Login
 if (TOKEN && API_URL) {
   api("me").then(me => {
     ME = me;
