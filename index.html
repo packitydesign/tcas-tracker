@@ -45,6 +45,15 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .user-card-stat b{display:block;font-size:1.2rem;color:var(--ink)}
 .fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .lnk{border:none;background:none;padding:0;font-weight:600;color:var(--accent);text-align:left;cursor:pointer}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--accent)}
+details{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;background:var(--surface)}
+summary{cursor:pointer;padding:10px 14px;font-weight:600;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tk{padding:0 14px 12px}.item{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line)}
+.item input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+.cds{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.cd{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface)}
+.wkbox{max-height:460px;overflow:auto;position:relative;border:1px solid var(--line);border-radius:12px}
+.wkbox thead th{position:sticky;top:0;background:var(--surface);z-index:1}
 </style>
 </head>
 <body>
@@ -82,6 +91,17 @@ var USERS = [];
 var hv = "all";
 var q = "";
 var cur = null;
+var detailTab = "tcas";
+
+var TR = ["ติวเข้ม", "UpSkill"];
+var C = [
+  ["คณิต",0,"8303","Applied Math Admission TCAS เล่ม 1",45],["คณิต",0,"8304","Applied Math Admission TCAS เล่ม 2",40],["คณิต",0,"8305","Applied Math Admission TCAS เล่ม 3",32],["คณิต",0,"8306","Applied Math Admission TCAS เล่ม 4",40],["คณิต",0,"8307","Applied Math Admission TCAS เล่ม 5",36],["คณิต",1,"8309","UpSkill คณิตศาสตร์ประยุกต์",54],
+  ["ฟิสิกส์",0,"1301","V-Series เล่ม 1 กลุ่มกลศาสตร์ 1",16],["ฟิสิกส์",0,"1302","V-Series เล่ม 2 กลุ่มกลศาสตร์ 2",28],["ฟิสิกส์",0,"1303","V-Series เล่ม 3 กลุ่มกลศาสตร์ 3",12.5],["ฟิสิกส์",0,"1304","V-Series เล่ม 4 กลุ่มสมบัติสาร",24.5],["ฟิสิกส์",0,"1305","V-Series เล่ม 5 กลุ่มไฟฟ้า",32],["ฟิสิกส์",0,"1306","V-Series เล่ม 6 กลุ่มคลื่น",21.5],["ฟิสิกส์",0,"1307","V-Series เล่ม 7 ฟิสิกส์แผนใหม่",25.5],["ฟิสิกส์",1,"1316","UpSkill ฟิสิกส์ A-Level",36],
+  ["เคมี",0,"3301","เคมี TCAS เล่ม 1 กลุ่มอะตอม",48],["เคมี",0,"3302","เคมี TCAS เล่ม 2 กลุ่มปริมาณสารสัมพันธ์",28],["เคมี",0,"3303","เคมี TCAS เล่ม 3 กลุ่มแก๊ส อัตราและสมดุลเคมี",28],["เคมี",0,"3304","เคมี TCAS เล่ม 4 กลุ่มกรด-เบสและเคมีไฟฟ้า",48.5],["เคมี",0,"3305","เคมี TCAS เล่ม 5 กลุ่มเคมีอินทรีย์",36],["เคมี",1,"3307","UpSkill เคมี A-Level",60],
+  ["ชีววิทยา",0,"2301","Biology TCAS เล่ม 1 Basic Bio",27],["ชีววิทยา",0,"2302","Biology TCAS เล่ม 2 Genetics",52],["ชีววิทยา",0,"2303","Biology TCAS เล่ม 3 Taxo & Eco",33.5],["ชีววิทยา",0,"2304","Biology TCAS เล่ม 4 Human I",27],["ชีววิทยา",0,"2305","Biology TCAS เล่ม 5 Human II",31.5],["ชีววิทยา",0,"2306","Biology TCAS เล่ม 6 Plant",23],["ชีววิทยา",1,"2307","UpSkill ชีววิทยา A-Level",45],
+  ["English",0,"P3009","English TCAS Success A-Level",60],["English",1,"P2033","Upskill English A-Level",24]
+].map(function(a){ return {s:a[0], t:a[1], c:a[2], n:a[3], h:a[4]}; });
+var SUBJ = ["คณิต", "ฟิสิกส์", "เคมี", "ชีววิทยา", "English"];
 
 function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
@@ -204,7 +224,7 @@ function renderStaffTab(tabs) {
       "</div>" +
       "<div class=\"user-card-body\">" +
         "<div class=\"user-card-stat\"><span>นักเรียน</span><b>" + uStudents.length + " คน</b></div>" +
-        "<div class=\"user-card-stat\"><span>ยอดขาย</span><b style=\"color:var(--ok)\">฿" + uPrice.toLocaleString() + "</b></div>" +
+        "<div class=\"user-card-stat\"><span>ยอดขาย</span><b style="color:var(--ok)\">฿" + uPrice.toLocaleString() + "</b></div>" +
       "</div>" +
       "<div style=\"display:flex;gap:6px\">" +
         "<button class=\"dng\" onclick=\"delSubUser('" + u.id + "')\" style=\"padding:4px 10px;font-size:.8rem;color:var(--bad)\">🗑️ ลบ Sub user</button>" +
@@ -254,7 +274,7 @@ function filterTable() {
 function addStudent() {
   var first = prompt("กรอกชื่อนักเรียน:");
   if (!first) return;
-  var newSt = { id: "s" + Date.now().toString(36), first: first, last: "", nick: "", price: 0, batch: "DEK71" };
+  var newSt = { id: "s" + Date.now().toString(36), first: first, last: "", nick: "", price: 0, batch: "DEK71", w: {}, subj: {} };
   api("save", { s: newSt })
     .then(function() {
       STUDENTS.push(newSt);
@@ -288,26 +308,136 @@ function delSubUser(id) {
 function editStudent(id) {
   var s = STUDENTS.find(function(x) { return x.id === id; });
   if (!s) return;
+  cur = id;
   $("home").hidden = true;
   $("detail").hidden = false;
-  
-  $("detail").innerHTML = 
-    "<button onclick=\"backToHome()\">← กลับหน้ารายชื่อ</button>" +
-    "<div class=\"panel\" style=\"margin-top:12px\">" +
-      "<h2>แก้ไขข้อมูล: " + esc(s.first) + "</h2>" +
-      "<div class=\"fg f\">" +
-        "<div><label>ชื่อ</label><input id=\"efirst\" value=\"" + esc(s.first) + "\"></div>" +
-        "<div><label>นามสกุล</label><input id=\"elast\" value=\"" + esc(s.last) + "\"></div>" +
-        "<div><label>ชื่อเล่น</label><input id=\"enick\" value=\"" + esc(s.nick) + "\"></div>" +
-        "<div><label>เบอร์โทร</label><input id=\"ephone\" value=\"" + esc(s.phone) + "\"></div>" +
-        "<div><label>รุ่น</label><input id=\"ebatch\" value=\"" + esc(s.batch) + "\"></div>" +
-        "<div><label>ราคาคอร์ส (หลังหักส่วนลดแล้ว)</label><input id=\"eprice\" type=\"number\" value=\"" + (+s.price || 0) + "\"></div>" +
-      "</div>" +
-      "<div style=\"display:flex;gap:10px;margin-top:16px\">" +
-        "<button class=\"primary\" onclick=\"saveEdit('" + s.id + "')\">บันทึกข้อมูล</button>" +
-        "<button class=\"dng\" onclick=\"delStudent('" + s.id + "')\" style=\"color:var(--bad)\">🗑️ ลบนักเรียน</button>" +
-      "</div>" +
+  renderDetail(s);
+}
+
+function switchDetailTab(t) {
+  detailTab = t;
+  var s = STUDENTS.find(function(x) { return x.id === cur; });
+  if (s) renderDetail(s);
+}
+
+function renderDetail(s) {
+  s.w = s.w || {};
+  var subTabs = 
+    "<div class=\"tabs\" style=\"margin-top:12px\">" +
+      "<button class=\"" + (detailTab === "tcas" ? "on" : "") + "\" onclick=\"switchDetailTab('tcas')\">🎯 แผน TCAS (ติวเข้ม & UpSkill)</button>" +
+      "<button class=\"" + (detailTab === "hs" ? "on" : "") + "\" onclick=\"switchDetailTab('hs')\">📚 เนื้อหา ม.ปลาย (ม.4-ม.6)</button>" +
+      "<button class=\"" + (detailTab === "consult" ? "on" : "") + "\" onclick=\"switchDetailTab('consult')\">📅 ติดตามสัปดาห์ / คอนเซ้าต์</button>" +
+      "<button class=\"" + (detailTab === "info" ? "on" : "") + "\" onclick=\"switchDetailTab('info')\">⚙️ ข้อมูลโปรไฟล์</button>" +
     "</div>";
+
+  var bodyContent = "";
+  if (detailTab === "tcas") {
+    bodyContent = renderTcasTab(s);
+  } else if (detailTab === "hs") {
+    bodyContent = renderHsTab(s);
+  } else if (detailTab === "consult") {
+    bodyContent = renderConsultTab(s);
+  } else {
+    bodyContent = renderInfoTab(s);
+  }
+
+  $("detail").innerHTML = 
+    "<div class=\"tb\"><button onclick=\"backToHome()\">← กลับหน้ารายชื่อ</button></div>" +
+    "<div class=\"panel\">" +
+      "<h1>" + esc(s.first) + " " + esc(s.last) + " (" + esc(s.nick || "น้อง") + ")</h1>" +
+      "<p class=\"sub\">รุ่น: " + esc(s.batch) + " | เบอร์โทร: " + esc(s.phone || "-") + "</p>" +
+      subTabs +
+    "</div>" + bodyContent;
+}
+
+function renderTcasTab(s) {
+  var totalH = C.reduce(function(sum, x){ return sum + x.h; }, 0);
+  var doneH = C.reduce(function(sum, x){ return sum + (s.w[x.c] || 0); }, 0);
+  var pct = totalH ? Math.round((doneH / totalH) * 100) : 0;
+
+  var items = SUBJ.map(function(subj) {
+    var subC = C.filter(function(x){ return x.s === subj; });
+    var subRows = subC.map(function(x) {
+      var done = s.w[x.c] || 0;
+      var isChk = done >= x.h;
+      return "<div class=\"item\">" +
+        "<input type=\"checkbox\" " + (isChk ? "checked" : "") + " onchange=\"toggleCourse('" + x.c + "', " + x.h + ")\">" +
+        "<label style=\"flex:1\"><b>" + esc(x.c) + "</b> " + esc(x.n) + " (" + x.h + " ชม.)</label>" +
+        "<input type=\"number\" value=\"" + done + "\" style=\"width:70px;padding:4px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink)\" onchange=\"updateHours('" + x.c + "', this.value)\"> ชม." +
+      "</div>";
+    }).join("");
+
+    return "<details open><summary><span>" + subj + "</span><small>(" + subC.length + " เล่ม)</small></summary><div class=\"tk\">" + subRows + "</div></details>";
+  }).join("");
+
+  return "<div class=\"panel\">" +
+    "<h2>สรุปการเรียนคอร์ส TCAS</h2>" +
+    "<div style=\"margin-bottom:12px\">เรียนแล้ว <b>" + doneH + "</b> / " + totalH + " ชม. (" + pct + "%)</div>" +
+    "<div class=\"bar\"><i style=\"width:" + pct + "%\"></i></div>" +
+    "<div style=\"margin-top:16px\">" + items + "</div>" +
+  "</div>";
+}
+
+function renderHsTab(s) {
+  return "<div class=\"panel\">" +
+    "<h2>📚 คอร์สเนื้อหา ม.ปลาย (ม.4 - ม.6)</h2>" +
+    "<p class=\"sub\">ติดตามสถานะการเรียนรายแพ็คและวันหมดอายุคอร์ส</p>" +
+    "<div class=\"cds\">" +
+      "<div class=\"cd\"><b>📐 Pack 1 คณิต ม.ปลาย</b><div class=\"sub\">ม.4 เทอม 1</div><span class=\"chip ok\">ตามแผน</span></div>" +
+      "<div class=\"cd\"><b>⚡ Pack กลศาสตร์ 1</b><div class=\"sub\">ม.4 เทอม 1</div><span class=\"chip ok\">ตามแผน</span></div>" +
+      "<div class=\"cd\"><b>🧪 Pack เคมี ม.4</b><div class=\"sub\">ม.4 เทอม 1</div><span class=\"chip ok\">ตามแผน</span></div>" +
+      "<div class=\"cd\"><b>🧬 Pack ชีววิทยา ม.4</b><div class=\"sub\">ม.4 เทอม 1</div><span class=\"chip ok\">ตามแผน</span></div>" +
+    "</div>" +
+  "</div>";
+}
+
+function renderConsultTab(s) {
+  return "<div class=\"panel\">" +
+    "<h2>📅 Weekly Consult & Tracker (ติดตามการเรียนสัปดาห์ต่อสัปดาห์)</h2>" +
+    "<div class=\"wkbox\">" +
+      "<table>" +
+        "<thead><tr><th>สัปดาห์</th><th>ชั่วโมงตามแผน</th><th>ชั่วโมงที่เรียนจริง</th><th>สถานะ</th></tr></thead>" +
+        "<tbody>" +
+          "<tr><td>สัปดาห์ปัจจุบัน</td><td>12 ชม.</td><td>10 ชม.</td><td><span class=\"chip wait\">ช้ากว่าแผน 2 ชม.</span></td></tr>" +
+          "<tr><td>สัปดาห์ที่แล้ว</td><td>12 ชม.</td><td>14 ชม.</td><td><span class=\"chip ok\">ล้ำหน้า +2 ชม.</span></td></tr>" +
+        "</tbody>" +
+      "</table>" +
+    "</div>" +
+  "</div>";
+}
+
+function renderInfoTab(s) {
+  return "<div class=\"panel\">" +
+    "<h2>⚙️ แก้ไขข้อมูลโปรไฟล์นักเรียน</h2>" +
+    "<div class=\"fg f\">" +
+      "<div><label>ชื่อ</label><input id=\"efirst\" value=\"" + esc(s.first) + "\"></div>" +
+      "<div><label>นามสกุล</label><input id=\"elast\" value=\"" + esc(s.last) + "\"></div>" +
+      "<div><label>ชื่อเล่น</label><input id=\"enick\" value=\"" + esc(s.nick) + "\"></div>" +
+      "<div><label>เบอร์โทร</label><input id=\"ephone\" value=\"" + esc(s.phone) + "\"></div>" +
+      "<div><label>รุ่น</label><input id=\"ebatch\" value=\"" + esc(s.batch) + "\"></div>" +
+      "<div><label>ราคาคอร์ส (บาท)</label><input id=\"eprice\" type=\"number\" value=\"" + (+s.price || 0) + "\"></div>" +
+    "</div>" +
+    "<div style=\"display:flex;gap:10px;margin-top:16px\">" +
+      "<button class=\"primary\" onclick=\"saveEdit('" + s.id + "')\">บันทึกข้อมูล</button>" +
+      "<button class=\"dng\" onclick=\"delStudent('" + s.id + "')\" style=\"color:var(--bad)\">🗑️ ลบนักเรียน</button>" +
+    "</div>" +
+  "</div>";
+}
+
+function toggleCourse(code, maxH) {
+  var s = STUDENTS.find(function(x) { return x.id === cur; });
+  if (!s) return;
+  s.w = s.w || {};
+  s.w[code] = s.w[code] >= maxH ? 0 : maxH;
+  api("save", { s: s }).then(function() { renderDetail(s); });
+}
+
+function updateHours(code, val) {
+  var s = STUDENTS.find(function(x) { return x.id === cur; });
+  if (!s) return;
+  s.w = s.w || {};
+  s.w[code] = +val || 0;
+  api("save", { s: s }).then(function() { renderDetail(s); });
 }
 
 function saveEdit(id) {
@@ -363,6 +493,7 @@ function exportDriveSheet() {
 }
 
 function backToHome() {
+  cur = null;
   $("detail").hidden = true;
   $("home").hidden = false;
   renderHome();
