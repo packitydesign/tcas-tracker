@@ -83,19 +83,19 @@ var hv = "all";
 var q = "";
 var cur = null;
 
-function \$(id) { return document.getElementById(id); }
+function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
 
 function toast(msg) {
-  var t = \$("toast");
+  var t = $("toast");
   t.textContent = msg;
   setTimeout(function() { t.textContent = ""; }, 3000);
 }
 
-if (API_URL) \$("apiurl").value = API_URL;
+if (API_URL) $("apiurl").value = API_URL;
 
 function api(action, params) {
-  var url = \$("apiurl").value.trim() || API_URL;
+  var url = $("apiurl").value.trim() || API_URL;
   if (!url) return Promise.reject(new Error("กรุณากรอก Web app URL"));
   
   var payload = Object.assign({ a: action, t: TOKEN }, params || {});
@@ -111,18 +111,18 @@ function api(action, params) {
   });
 }
 
-\$("doLogin").onclick = function() {
-  var btn = \$("doLogin");
-  var url = \$("apiurl").value.trim();
-  var code = \$("code").value.trim();
-  \$("lerr").textContent = "";
+$("doLogin").onclick = function() {
+  var btn = $("doLogin");
+  var url = $("apiurl").value.trim();
+  var code = $("code").value.trim();
+  $("lerr").textContent = "";
 
-  if (!url) { \$("lerr").textContent = "กรุณากรอก Web app URL"; return; }
-  if (!code) { \$("lerr").textContent = "กรุณากรอกรหัสผู้ใช้"; return; }
+  if (!url) { $("lerr").textContent = "กรุณากรอก Web app URL"; return; }
+  if (!code) { $("lerr").textContent = "กรุณากรอกรหัสผู้ใช้"; return; }
 
   btn.disabled = true;
-  \$("lerr").style.color = "var(--ink)";
-  \$("lerr").textContent = "กำลังเข้าสู่ระบบ...";
+  $("lerr").style.color = "var(--ink)";
+  $("lerr").textContent = "กำลังเข้าสู่ระบบ...";
   
   localStorage.setItem("tcas-api", url);
   API_URL = url;
@@ -132,14 +132,14 @@ function api(action, params) {
       TOKEN = data.token;
       ME = data.me;
       localStorage.setItem("tcas-token", TOKEN);
-      \$("login").hidden = true;
-      \$("home").hidden = false;
+      $("login").hidden = true;
+      $("home").hidden = false;
       toast("เข้าสู่ระบบสำเร็จ");
       loadData();
     })
     .catch(function(err) {
-      \$("lerr").style.color = "var(--bad)";
-      \$("lerr").textContent = err.message === "invalid" ? "รหัสผู้ใช้ไม่ถูกต้อง" : err.message;
+      $("lerr").style.color = "var(--bad)";
+      $("lerr").textContent = err.message === "invalid" ? "รหัสผู้ใช้ไม่ถูกต้อง" : err.message;
     })
     .then(function() { btn.disabled = false; });
 };
@@ -157,7 +157,7 @@ function loadData() {
 }
 
 function renderHome() {
-  \$("who").innerHTML = "ผู้ใช้งาน: <b>" + esc(ME.name) + "</b> (" + (ME.role === "main" ? "Main User" : "Sub User") + ") | <button onclick=\"logout()\" style=\"padding:2px 10px;font-size:.8rem\">ออกจากระบบ</button>";
+  $("who").innerHTML = "ผู้ใช้งาน: <b>" + esc(ME.name) + "</b> (" + (ME.role === "main" ? "Main User" : "Sub User") + ") | <button onclick=\"logout()\" style=\"padding:2px 10px;font-size:.8rem\">ออกจากระบบ</button>";
   
   var totalPrice = STUDENTS.reduce(function(sum, s) { return sum + (+s.price || 0); }, 0);
   
@@ -172,7 +172,7 @@ function renderHome() {
     return;
   }
 
-  \$("home").innerHTML = 
+  $("home").innerHTML = 
     "<h1>🎓 ติดตามนักเรียนที่สมัครคอร์ส</h1>" + tabs +
     "<div class=\"stats\">" +
       "<div class=\"stat hero\"><b>" + STUDENTS.length + " คน</b><span>นักเรียนทั้งหมด</span></div>" +
@@ -212,7 +212,7 @@ function renderStaffTab(tabs) {
     "</div>";
   }).join("");
 
-  \$("home").innerHTML = 
+  $("home").innerHTML = 
     "<h1>🎓 ติดตามนักเรียนที่สมัครคอร์ส</h1>" + tabs +
     "<div class=\"panel\">" +
       "<h2>🧑‍🏫 Dashboard รายบุคคล Sub User</h2>" +
@@ -244,11 +244,11 @@ function renderTableRows(list) {
 }
 
 function filterTable() {
-  q = \$("q").value.toLowerCase();
+  q = $("q").value.toLowerCase();
   var filtered = STUDENTS.filter(function(s) {
     return (s.first + s.last + s.nick).toLowerCase().indexOf(q) !== -1;
   });
-  \$("stbody").innerHTML = renderTableRows(filtered);
+  $("stbody").innerHTML = renderTableRows(filtered);
 }
 
 function addStudent() {
@@ -261,4 +261,132 @@ function addStudent() {
       renderHome();
       toast("เพิ่มนักเรียนเรียบร้อย");
     })
-    .catch(function(err) { toast("บันทึกไม่สำเร็จ
+    .catch(function(err) { toast("บันทึกไม่สำเร็จ: " + err.message); });
+}
+
+function addSubUser() {
+  var name = $("newSubName").value.trim();
+  if (!name) return toast("กรอกชื่อ Sub user ก่อน");
+  api("addUser", { name: name })
+    .then(function(res) {
+      alert("สร้าง Sub user เรียบร้อย\nรหัสเข้าใช้งานคือ: " + res.code);
+      loadData();
+    })
+    .catch(function(err) { toast("เพิ่มไม่สำเร็จ: " + err.message); });
+}
+
+function delSubUser(id) {
+  if (!confirm("ยืนยันลบ Sub user คนนี้?")) return;
+  api("delUser", { id: id })
+    .then(function() {
+      toast("ลบ Sub user เรียบร้อย");
+      loadData();
+    })
+    .catch(function(err) { toast("ลบไม่สำเร็จ: " + err.message); });
+}
+
+function editStudent(id) {
+  var s = STUDENTS.find(function(x) { return x.id === id; });
+  if (!s) return;
+  $("home").hidden = true;
+  $("detail").hidden = false;
+  
+  $("detail").innerHTML = 
+    "<button onclick=\"backToHome()\">← กลับหน้ารายชื่อ</button>" +
+    "<div class=\"panel\" style=\"margin-top:12px\">" +
+      "<h2>แก้ไขข้อมูล: " + esc(s.first) + "</h2>" +
+      "<div class=\"fg f\">" +
+        "<div><label>ชื่อ</label><input id=\"efirst\" value=\"" + esc(s.first) + "\"></div>" +
+        "<div><label>นามสกุล</label><input id=\"elast\" value=\"" + esc(s.last) + "\"></div>" +
+        "<div><label>ชื่อเล่น</label><input id=\"enick\" value=\"" + esc(s.nick) + "\"></div>" +
+        "<div><label>เบอร์โทร</label><input id=\"ephone\" value=\"" + esc(s.phone) + "\"></div>" +
+        "<div><label>รุ่น</label><input id=\"ebatch\" value=\"" + esc(s.batch) + "\"></div>" +
+        "<div><label>ราคาคอร์ส (หลังหักส่วนลดแล้ว)</label><input id=\"eprice\" type=\"number\" value=\"" + (+s.price || 0) + "\"></div>" +
+      "</div>" +
+      "<div style=\"display:flex;gap:10px;margin-top:16px\">" +
+        "<button class=\"primary\" onclick=\"saveEdit('" + s.id + "')\">บันทึกข้อมูล</button>" +
+        "<button class=\"dng\" onclick=\"delStudent('" + s.id + "')\" style=\"color:var(--bad)\">🗑️ ลบนักเรียน</button>" +
+      "</div>" +
+    "</div>";
+}
+
+function saveEdit(id) {
+  var s = STUDENTS.find(function(x) { return x.id === id; });
+  if (!s) return;
+  s.first = $("efirst").value;
+  s.last = $("elast").value;
+  s.nick = $("enick").value;
+  s.phone = $("ephone").value;
+  s.batch = $("ebatch").value;
+  s.price = $("eprice").value;
+
+  api("save", { s: s })
+    .then(function() {
+      toast("บันทึกข้อมูลแล้ว");
+      backToHome();
+    })
+    .catch(function(err) { toast("เกิดข้อผิดพลาด: " + err.message); });
+}
+
+function delStudent(id) {
+  if (!confirm("ยืนยันลบนักเรียนคนนี้ออกจากระบบ?")) return;
+  api("del", { id: id })
+    .then(function() {
+      toast("ลบข้อมูลนักเรียนแล้ว");
+      STUDENTS = STUDENTS.filter(function(x) { return x.id !== id; });
+      backToHome();
+    })
+    .catch(function(err) { toast("ลบไม่สำเร็จ: " + err.message); });
+}
+
+function exportDriveSheet() {
+  toast("กำลังสร้าง Google Sheet ใน Drive...");
+  var sheets = [
+    {
+      name: "ภาพรวมนักเรียน",
+      rows: [
+        ["ชื่อ", "นามสกุล", "ชื่อเล่น", "เบอร์โทร", "รุ่น", "ราคาคอร์ส"],
+        STUDENTS.map(function(s) { return [s.first, s.last, s.nick, s.phone, s.batch, +s.price || 0]; })
+      ]
+    }
+  ];
+
+  STUDENTS.forEach(function(s) {
+    var name = (s.nick || s.first || "นักเรียน").slice(0, 15);
+    sheets.push({ name: "TCAS-" + name, rows: [["วิชา", "สถานะ"], ["คณิตศาสตร์", "ตามแผน"]] });
+    sheets.push({ name: "ม.ปลาย-" + name, rows: [["วิชา", "สถานะ"], ["ฟิสิกส์", "ตามแผน"]] });
+  });
+
+  api("sheet", { title: "TCAS Report", sheets: sheets })
+    .then(function(res) { alert("สร้างสำเร็จ! เปิด Google Sheet ได้ที่:\n" + res.url); })
+    .catch(function(err) { toast("สร้างไม่สำเร็จ: " + err.message); });
+}
+
+function backToHome() {
+  $("detail").hidden = true;
+  $("home").hidden = false;
+  renderHome();
+}
+
+function logout() {
+  localStorage.removeItem("tcas-token");
+  TOKEN = "";
+  $("home").hidden = true;
+  $("login").hidden = false;
+  $("code").value = "";
+  $("who").innerHTML = "";
+}
+
+if (TOKEN && API_URL) {
+  api("me")
+    .then(function(me) {
+      ME = me;
+      $("login").hidden = true;
+      $("home").hidden = false;
+      loadData();
+    })
+    .catch(function() { logout(); });
+}
+</script>
+</body>
+</html>
