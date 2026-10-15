@@ -93,14 +93,37 @@ var q = "";
 var cur = null;
 var detailTab = "tcas";
 
-var TR = ["ติวเข้ม", "UpSkill"];
 var C = [
-  ["คณิต",0,"8303","Applied Math Admission TCAS เล่ม 1",45],["คณิต",0,"8304","Applied Math Admission TCAS เล่ม 2",40],["คณิต",0,"8305","Applied Math Admission TCAS เล่ม 3",32],["คณิต",0,"8306","Applied Math Admission TCAS เล่ม 4",40],["คณิต",0,"8307","Applied Math Admission TCAS เล่ม 5",36],["คณิต",1,"8309","UpSkill คณิตศาสตร์ประยุกต์",54],
-  ["ฟิสิกส์",0,"1301","V-Series เล่ม 1 กลุ่มกลศาสตร์ 1",16],["ฟิสิกส์",0,"1302","V-Series เล่ม 2 กลุ่มกลศาสตร์ 2",28],["ฟิสิกส์",0,"1303","V-Series เล่ม 3 กลุ่มกลศาสตร์ 3",12.5],["ฟิสิกส์",0,"1304","V-Series เล่ม 4 กลุ่มสมบัติสาร",24.5],["ฟิสิกส์",0,"1305","V-Series เล่ม 5 กลุ่มไฟฟ้า",32],["ฟิสิกส์",0,"1306","V-Series เล่ม 6 กลุ่มคลื่น",21.5],["ฟิสิกส์",0,"1307","V-Series เล่ม 7 ฟิสิกส์แผนใหม่",25.5],["ฟิสิกส์",1,"1316","UpSkill ฟิสิกส์ A-Level",36],
-  ["เคมี",0,"3301","เคมี TCAS เล่ม 1 กลุ่มอะตอม",48],["เคมี",0,"3302","เคมี TCAS เล่ม 2 กลุ่มปริมาณสารสัมพันธ์",28],["เคมี",0,"3303","เคมี TCAS เล่ม 3 กลุ่มแก๊ส อัตราและสมดุลเคมี",28],["เคมี",0,"3304","เคมี TCAS เล่ม 4 กลุ่มกรด-เบสและเคมีไฟฟ้า",48.5],["เคมี",0,"3305","เคมี TCAS เล่ม 5 กลุ่มเคมีอินทรีย์",36],["เคมี",1,"3307","UpSkill เคมี A-Level",60],
-  ["ชีววิทยา",0,"2301","Biology TCAS เล่ม 1 Basic Bio",27],["ชีววิทยา",0,"2302","Biology TCAS เล่ม 2 Genetics",52],["ชีววิทยา",0,"2303","Biology TCAS เล่ม 3 Taxo & Eco",33.5],["ชีววิทยา",0,"2304","Biology TCAS เล่ม 4 Human I",27],["ชีววิทยา",0,"2305","Biology TCAS เล่ม 5 Human II",31.5],["ชีววิทยา",0,"2306","Biology TCAS เล่ม 6 Plant",23],["ชีววิทยา",1,"2307","UpSkill ชีววิทยา A-Level",45],
-  ["English",0,"P3009","English TCAS Success A-Level",60],["English",1,"P2033","Upskill English A-Level",24]
-].map(function(a){ return {s:a[0], t:a[1], c:a[2], n:a[3], h:a[4]}; });
+  {s:"คณิต",t:0,c:"8303",n:"Applied Math Admission TCAS เล่ม 1",h:45},
+  {s:"คณิต",t:0,c:"8304",n:"Applied Math Admission TCAS เล่ม 2",h:40},
+  {s:"คณิต",t:0,c:"8305",n:"Applied Math Admission TCAS เล่ม 3",h:32},
+  {s:"คณิต",t:0,c:"8306",n:"Applied Math Admission TCAS เล่ม 4",h:40},
+  {s:"คณิต",t:0,c:"8307",n:"Applied Math Admission TCAS เล่ม 5",h:36},
+  {s:"คณิต",t:1,c:"8309",n:"UpSkill คณิตศาสตร์ประยุกต์",h:54},
+  {s:"ฟิสิกส์",t:0,c:"1301",n:"V-Series เล่ม 1 กลุ่มกลศาสตร์ 1",h:16},
+  {s:"ฟิสิกส์",t:0,c:"1302",n:"V-Series เล่ม 2 กลุ่มกลศาสตร์ 2",h:28},
+  {s:"ฟิสิกส์",t:0,c:"1303",n:"V-Series เล่ม 3 กลุ่มกลศาสตร์ 3",h:12.5},
+  {s:"ฟิสิกส์",t:0,c:"1304",n:"V-Series เล่ม 4 กลุ่มสมบัติสาร",h:24.5},
+  {s:"ฟิสิกส์",t:0,c:"1305",n:"V-Series เล่ม 5 กลุ่มไฟฟ้า",h:32},
+  {s:"ฟิสิกส์",t:0,c:"1306",n:"V-Series เล่ม 6 กลุ่มคลื่น",h:21.5},
+  {s:"ฟิสิกส์",t:0,c:"1307",n:"V-Series เล่ม 7 ฟิสิกส์แผนใหม่",h:25.5},
+  {s:"ฟิสิกส์",t:1,c:"1316",n:"UpSkill ฟิสิกส์ A-Level",h:36},
+  {s:"เคมี",t:0,c:"3301",n:"เคมี TCAS เล่ม 1 กลุ่มอะตอม",h:48},
+  {s:"เคมี",t:0,c:"3302",n:"เคมี TCAS เล่ม 2 กลุ่มปริมาณสารสัมพันธ์",h:28},
+  {s:"เคมี",t:0,c:"3303",n:"เคมี TCAS เล่ม 3 กลุ่มแก๊ส อัตราและสมดุลเคมี",h:28},
+  {s:"เคมี",t:0,c:"3304",n:"เคมี TCAS เล่ม 4 กลุ่มกรด-เบสและเคมีไฟฟ้า",h:48.5},
+  {s:"เคมี",t:0,c:"3305",n:"เคมี TCAS เล่ม 5 กลุ่มเคมีอินทรีย์",h:36},
+  {s:"เคมี",t:1,c:"3307",n:"UpSkill เคมี A-Level",h:60},
+  {s:"ชีววิทยา",t:0,c:"2301",n:"Biology TCAS เล่ม 1 Basic Bio",h:27},
+  {s:"ชีววิทยา",t:0,c:"2302",n:"Biology TCAS เล่ม 2 Genetics",h:52},
+  {s:"ชีววิทยา",t:0,c:"2303",n:"Biology TCAS เล่ม 3 Taxo & Eco",h:33.5},
+  {s:"ชีววิทยา",t:0,c:"2304",n:"Biology TCAS เล่ม 4 Human I",h:27},
+  {s:"ชีววิทยา",t:0,c:"2305",n:"Biology TCAS เล่ม 5 Human II",h:31.5},
+  {s:"ชีววิทยา",t:0,c:"2306",n:"Biology TCAS เล่ม 6 Plant",h:23},
+  {s:"ชีววิทยา",t:1,c:"2307",n:"UpSkill ชีววิทยา A-Level",h:45},
+  {s:"English",t:0,c:"P3009",n:"English TCAS Success A-Level",h:60},
+  {s:"English",t:1,c:"P2033",n:"Upskill English A-Level",h:24}
+];
 var SUBJ = ["คณิต", "ฟิสิกส์", "เคมี", "ชีววิทยา", "English"];
 
 function $(id) { return document.getElementById(id); }
@@ -235,7 +258,7 @@ function renderStaffTab(tabs) {
   $("home").innerHTML = 
     "<h1>🎓 ติดตามนักเรียนที่สมัครคอร์ส</h1>" + tabs +
     "<div class=\"panel\">" +
-      "2🧑‍🏫 Dashboard รายบุคคล Sub User</h2>" +
+      "<h2>🧑‍🏫 Dashboard รายบุคคล Sub User</h2>" +
       "<div style=\"margin-bottom:12px;display:flex;gap:8px\">" +
         "<input id=\"newSubName\" placeholder=\"ชื่อ Sub user ใหม่\" style=\"padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)\">" +
         "<button class=\"primary\" onclick=\"addSubUser()\">+ เพิ่ม Sub user</button>" +
