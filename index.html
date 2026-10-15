@@ -62,229 +62,249 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 </main>
 
 <script>
-let API_URL = localStorage.getItem("tcas-api") || "";
-let TOKEN = localStorage.getItem("tcas-token") || "";
-let ME = null;
-let STUDENTS = [];
+var API_URL = localStorage.getItem("tcas-api") || "";
+var TOKEN = localStorage.getItem("tcas-token") || "";
+var ME = null;
+var STUDENTS = [];
 
-const \$ = id => document.getElementById(id);
-const esc = s => String(s || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-
-function toast(msg) {
-  const t = \$("toast");
-  t.textContent = msg;
-  setTimeout(() => { t.textContent = ""; }, 3000);
+function $(id) {
+  return document.getElementById(id);
 }
 
-if (API_URL) \$("apiurl").value = API_URL;
+function esc(s) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 
-async function api(action, params = {}) {
-  const url = \$("apiurl").value.trim() || API_URL;
-  if (!url) throw new Error("กรุณากรอก Web app URL");
+function toast(msg) {
+  var t = $("toast");
+  t.textContent = msg;
+  setTimeout(function() { t.textContent = ""; }, 3000);
+}
+
+if (API_URL) {
+  $("apiurl").value = API_URL;
+}
+
+function api(action, params) {
+  var url = $("apiurl").value.trim() || API_URL;
+  if (!url) return Promise.reject(new Error("กรุณากรอก Web app URL"));
   
-  const payload = Object.assign({ a: action, t: TOKEN }, params);
-  const res = await fetch(url, {
+  var payload = Object.assign({ a: action, t: TOKEN }, params || {});
+  return fetch(url, {
     method: "POST",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(payload)
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(json) {
+    if (!json.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
+    return json.data;
   });
-  
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
-  return json.data;
 }
 
-\$("doTest").onclick = async () => {
-  const url = \$("apiurl").value.trim();
-  if (!url) return \$("lerr").textContent = "กรุณากรอก URL ก่อนทดสอบ";
-  \$("lerr").style.color = "var(--ink)";
-  \$("lerr").textContent = "กำลังทดสอบ...";
-  try {
-    const res = await fetch(url);
-    const j = await res.json();
-    if (j.ok) {
-      \$("lerr").style.color = "var(--ok)";
-      \$("lerr").textContent = "✓ เชื่อมต่อ Google Apps Script สำเร็จ!";
-    } else {
-      throw new Error();
-    }
-  } catch (e) {
-    \$("lerr").style.color = "var(--bad)";
-    \$("lerr").textContent = "✗ ไม่สามารถเชื่อมต่อ URL นี้ได้ ตรวจสอบสิทธิ์สคริปต์";
+$("doTest").onclick = function() {
+  var url = $("apiurl").value.trim();
+  if (!url) {
+    $("lerr").textContent = "กรุณากรอก URL ก่อนทดสอบ";
+    return;
   }
+  $("lerr").style.color = "var(--ink)";
+  $("lerr").textContent = "กำลังทดสอบ...";
+  fetch(url)
+    .then(function(res) { return res.json(); })
+    .then(function(j) {
+      if (j.ok) {
+        $("lerr").style.color = "var(--ok)";
+        $("lerr").textContent = "✓ เชื่อมต่อ Google Apps Script สำเร็จ!";
+      } else {
+        throw new Error();
+      }
+    })
+    .catch(function() {
+      $("lerr").style.color = "var(--bad)";
+      $("lerr").textContent = "✗ ไม่สามารถเชื่อมต่อ URL นี้ได้ ตรวจสอบสิทธิ์สคริปต์";
+    });
 };
 
-\$("doLogin").onclick = async () => {
-  const btn = \$("doLogin");
-  const url = \$("apiurl").value.trim();
-  const code = \$("code").value.trim();
-  \$("lerr").textContent = "";
+$("doLogin").onclick = function() {
+  var btn = $("doLogin");
+  var url = $("apiurl").value.trim();
+  var code = $("code").value.trim();
+  $("lerr").textContent = "";
 
-  if (!url) return \$("lerr").textContent = "กรุณากรอก Web app URL";
-  if (!code) return \$("lerr").textContent = "กรุณากรอกรหัสผู้ใช้";
-
-  try {
-    btn.disabled = true;
-    \$("lerr").style.color = "var(--ink)";
-    \$("lerr").textContent = "กำลังเข้าสู่ระบบ...";
-    
-    localStorage.setItem("tcas-api", url);
-    API_URL = url;
-
-    const data = await api("login", { code });
-    TOKEN = data.token;
-    ME = data.me;
-    localStorage.setItem("tcas-token", TOKEN);
-
-    \$("login").hidden = true;
-    \$("home").hidden = false;
-    toast("เข้าสู่ระบบสำเร็จ");
-    loadData();
-  } catch (err) {
-    \$("lerr").style.color = "var(--bad)";
-    \$("lerr").textContent = err.message === "invalid" ? "รหัสผู้ใช้ไม่ถูกต้อง" : err.message;
-  } finally {
-    btn.disabled = false;
+  if (!url) {
+    $("lerr").textContent = "กรุณากรอก Web app URL";
+    return;
   }
+  if (!code) {
+    $("lerr").textContent = "กรุณากรอกรหัสผู้ใช้";
+    return;
+  }
+
+  btn.disabled = true;
+  $("lerr").style.color = "var(--ink)";
+  $("lerr").textContent = "กำลังเข้าสู่ระบบ...";
+  
+  localStorage.setItem("tcas-api", url);
+  API_URL = url;
+
+  api("login", { code: code })
+    .then(function(data) {
+      TOKEN = data.token;
+      ME = data.me;
+      localStorage.setItem("tcas-token", TOKEN);
+      $("login").hidden = true;
+      $("home").hidden = false;
+      toast("เข้าสู่ระบบสำเร็จ");
+      loadData();
+    })
+    .catch(function(err) {
+      $("lerr").style.color = "var(--bad)";
+      $("lerr").textContent = err.message === "invalid" ? "รหัสผู้ใช้ไม่ถูกต้อง" : err.message;
+    })
+    .then(function() {
+      btn.disabled = false;
+    });
 };
 
-async function loadData() {
-  try {
-    const data = await api("list", { since: 0 });
-    STUDENTS = data.students || [];
-    renderHome();
-  } catch (err) {
-    toast("โหลดข้อมูลไม่สำเร็จ: " + err.message);
-  }
+function loadData() {
+  api("list", { since: 0 })
+    .then(function(data) {
+      STUDENTS = data.students || [];
+      renderHome();
+    })
+    .catch(function(err) {
+      toast("โหลดข้อมูลไม่สำเร็จ: " + err.message);
+    });
 }
 
 function renderHome() {
-  \$("who").innerHTML = `ผู้ใช้งาน: <b>${esc(ME.name)}</b> (${ME.role === "main" ? "Main User" : "Sub User"}) | <button onclick="logout()" style="padding:2px 10px;font-size:.8rem">ออกจากระบบ</button>`;
+  $("who").innerHTML = "ผู้ใช้งาน: <b>" + esc(ME.name) + "</b> (" + (ME.role === "main" ? "Main User" : "Sub User") + ") | <button onclick=\"logout()\" style=\"padding:2px 10px;font-size:.8rem\">ออกจากระบบ</button>";
   
-  const totalPrice = STUDENTS.reduce((sum, s) => sum + (+s.price || 0), 0);
+  var totalPrice = STUDENTS.reduce(function(sum, s) { return sum + (+s.price || 0); }, 0);
 
-  \$("home").innerHTML = `
-    <h1>🎓 ติดตามนักเรียนที่สมัครคอร์ส</h1>
-    <div class="stats">
-      <div class="stat"><b>${STUDENTS.length} คน</b><span>นักเรียนทั้งหมด</span></div>
-      <div class="stat"><b style="color:var(--ok)">฿${totalPrice.toLocaleString()}</b><span>สรุปยอดขายรวม</span></div>
-    </div>
-    <div class="panel">
-      <div class="tb">
-        <input id="q" placeholder="ค้นหาชื่อนักเรียน..." oninput="filterTable()">
-        <button class="primary" onclick="addStudent()">+ เพิ่มนักเรียน</button>
-      </div>
-      <div class="scroll">
-        <table>
-          <thead>
-            <tr><th>ชื่อ-สกุล</th><th>เบอร์โทร</th><th>รุ่น</th><th>ราคาคอร์ส</th><th>จัดการ</th></tr>
-          </thead>
-          <tbody id="stbody">
-            ${renderTableRows(STUDENTS)}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
+  $("home").innerHTML = 
+    "<h1>🎓 ติดตามนักเรียนที่สมัครคอร์ส</h1>" +
+    "<div class=\"stats\">" +
+      "<div class=\"stat\"><b>" + STUDENTS.length + " คน</b><span>นักเรียนทั้งหมด</span></div>" +
+      "<div class=\"stat\"><b style=\"color:var(--ok)\">฿" + totalPrice.toLocaleString() + "</b><span>สรุปยอดขายรวม</span></div>" +
+    "</div>" +
+    "<div class=\"panel\">" +
+      "<div class=\"tb\">" +
+        "<input id=\"q\" placeholder=\"ค้นหาชื่อนักเรียน...\" oninput=\"filterTable()\">" +
+        "<button class=\"primary\" onclick=\"addStudent()\">+ เพิ่มนักเรียน</button>" +
+      "</div>" +
+      "<div class=\"scroll\">" +
+        "<table>" +
+          "<thead><tr><th>ชื่อ-สกุล</th><th>เบอร์โทร</th><th>รุ่น</th><th>ราคาคอร์ส</th><th>จัดการ</th></tr></thead>" +
+          "<tbody id=\"stbody\">" + renderTableRows(STUDENTS) + "</tbody>" +
+        "</table>" +
+      "</div>" +
+    "</div>";
 }
 
 function renderTableRows(list) {
-  if (!list.length) return `<tr><td colspan="5" style="text-align:center;color:var(--muted)">ยังไม่มีข้อมูลนักเรียน</td></tr>`;
-  return list.map(s => `
-    <tr>
-      <td><b>${esc(s.first)} ${esc(s.last)}</b> (${esc(s.nick || "-")})</td>
-      <td>${esc(s.phone || "-")}</td>
-      <td>${esc(s.batch || "-")}</td>
-      <td>฿${(+s.price || 0).toLocaleString()}</td>
-      <td><button onclick="editStudent('${s.id}')" style="padding:3px 10px;font-size:.8rem">ดู/แก้ไข</button></td>
-    </tr>
-  `).join("");
+  if (!list.length) return "<tr><td colspan=\"5\" style=\"text-align:center;color:var(--muted)\">ยังไม่มีข้อมูลนักเรียน</td></tr>";
+  return list.map(function(s) {
+    return "<tr>" +
+      "<td><b>" + esc(s.first) + " " + esc(s.last) + "</b> (" + esc(s.nick || "-") + ")</td>" +
+      "<td>" + esc(s.phone || "-") + "</td>" +
+      "<td>" + esc(s.batch || "-") + "</td>" +
+      "<td>฿" + (+s.price || 0).toLocaleString() + "</td>" +
+      "<td><button onclick=\"editStudent('" + s.id + "')\" style=\"padding:3px 10px;font-size:.8rem\">ดู/แก้ไข</button></td>" +
+    "</tr>";
+  }).join("");
 }
 
 function filterTable() {
-  const q = \$("q").value.toLowerCase();
-  const filtered = STUDENTS.filter(s => (s.first + s.last + s.nick).toLowerCase().includes(q));
-  \$("stbody").innerHTML = renderTableRows(filtered);
+  var q = $("q").value.toLowerCase();
+  var filtered = STUDENTS.filter(function(s) {
+    return (s.first + s.last + s.nick).toLowerCase().indexOf(q) !== -1;
+  });
+  $("stbody").innerHTML = renderTableRows(filtered);
 }
 
-async function addStudent() {
-  const first = prompt("กรอกชื่อนักเรียน:");
+function addStudent() {
+  var first = prompt("กรอกชื่อนักเรียน:");
   if (!first) return;
-  const newSt = { id: "s" + Date.now().toString(36), first: first, last: "", nick: "", price: 0, batch: "DEK71" };
-  try {
-    await api("save", { s: newSt });
-    STUDENTS.push(newSt);
-    renderHome();
-    toast("เพิ่มนักเรียนเรียบร้อย");
-  } catch (err) {
-    toast("บันทึกไม่สำเร็จ: " + err.message);
-  }
+  var newSt = { id: "s" + Date.now().toString(36), first: first, last: "", nick: "", price: 0, batch: "DEK71" };
+  api("save", { s: newSt })
+    .then(function() {
+      STUDENTS.push(newSt);
+      renderHome();
+      toast("เพิ่มนักเรียนเรียบร้อย");
+    })
+    .catch(function(err) {
+      toast("บันทึกไม่สำเร็จ: " + err.message);
+    });
 }
 
 function editStudent(id) {
-  const s = STUDENTS.find(x => x.id === id);
+  var s = STUDENTS.find(function(x) { return x.id === id; });
   if (!s) return;
-  \$("home").hidden = true;
-  \$("detail").hidden = false;
+  $("home").hidden = true;
+  $("detail").hidden = false;
   
-  \$("detail").innerHTML = `
-    <button onclick="backToHome()">← กลับหน้ารายชื่อ</button>
-    <div class="panel" style="margin-top:12px">
-      <h2>แก้ไขข้อมูล: ${esc(s.first)}</h2>
-      <div class="f" style="display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
-        <div><label>ชื่อ</label><input id="efirst" value="${esc(s.first)}"></div>
-        <div><label>นามสกุล</label><input id="elast" value="${esc(s.last)}"></div>
-        <div><label>ชื่อเล่น</label><input id="enick" value="${esc(s.nick)}"></div>
-        <div><label>เบอร์โทร</label><input id="ephone" value="${esc(s.phone)}"></div>
-        <div><label>ราคาคอร์ส (บาท)</label><input id="eprice" type="number" value="${+s.price || 0}"></div>
-      </div>
-      <button class="primary" onclick="saveEdit('${s.id}')" style="margin-top:16px">บันทึกข้อมูล</button>
-    </div>
-  `;
+  $("detail").innerHTML = 
+    "<button onclick=\"backToHome()\">← กลับหน้ารายชื่อ</button>" +
+    "<div class=\"panel\" style=\"margin-top:12px\">" +
+      "<h2>แก้ไขข้อมูล: " + esc(s.first) + "</h2>" +
+      "<div class=\"f\" style=\"display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))\">" +
+        "<div><label>ชื่อ</label><input id=\"efirst\" value=\"" + esc(s.first) + "\"></div>" +
+        "<div><label>นามสกุล</label><input id=\"elast\" value=\"" + esc(s.last) + "\"></div>" +
+        "<div><label>ชื่อเล่น</label><input id="enick\" value=\"" + esc(s.nick) + "\"></div>" +
+        "<div><label>เบอร์โทร</label><input id=\"ephone\" value=\"" + esc(s.phone) + "\"></div>" +
+        "<div><label>ราคาคอร์ส (บาท)</label><input id=\"eprice\" type=\"number\" value=\"" + (+s.price || 0) + "\"></div>" +
+      "</div>" +
+      "<button class=\"primary\" onclick=\"saveEdit('" + s.id + "')\" style=\"margin-top:16px\">บันทึกข้อมูล</button>" +
+    "</div>";
 }
 
-async function saveEdit(id) {
-  const s = STUDENTS.find(x => x.id === id);
+function saveEdit(id) {
+  var s = STUDENTS.find(function(x) { return x.id === id; });
   if (!s) return;
-  s.first = \$("efirst").value;
-  s.last = \$("elast").value;
-  s.nick = \$("enick").value;
-  s.phone = \$("ephone").value;
-  s.price = \$("eprice").value;
+  s.first = $("efirst").value;
+  s.last = $("elast").value;
+  s.nick = $("enick").value;
+  s.phone = $("ephone").value;
+  s.price = $("eprice").value;
 
-  try {
-    await api("save", { s });
-    toast("บันทึกข้อมูลแล้ว");
-    backToHome();
-  } catch (err) {
-    toast("เกิดข้อผิดพลาด: " + err.message);
-  }
+  api("save", { s: s })
+    .then(function() {
+      toast("บันทึกข้อมูลแล้ว");
+      backToHome();
+    })
+    .catch(function(err) {
+      toast("เกิดข้อผิดพลาด: " + err.message);
+    });
 }
 
 function backToHome() {
-  \$("detail").hidden = true;
-  \$("home").hidden = false;
+  $("detail").hidden = true;
+  $("home").hidden = false;
   renderHome();
 }
 
 function logout() {
   localStorage.removeItem("tcas-token");
   TOKEN = "";
-  \$("home").hidden = true;
-  \$("login").hidden = false;
-  \$("code").value = "";
-  \$("who").innerHTML = "";
+  $("home").hidden = true;
+  $("login").hidden = false;
+  $("code").value = "";
+  $("who").innerHTML = "";
 }
 
 if (TOKEN && API_URL) {
-  api("me").then(me => {
-    ME = me;
-    \$("login").hidden = true;
-    \$("home").hidden = false;
-    loadData();
-  }).catch(() => {
-    logout();
-  });
+  api("me")
+    .then(function(me) {
+      ME = me;
+      $("login").hidden = true;
+      $("home").hidden = false;
+      loadData();
+    })
+    .catch(function() {
+      logout();
+    });
 }
 </script>
 </body>
