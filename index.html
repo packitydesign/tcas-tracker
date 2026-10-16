@@ -147,7 +147,7 @@ img,svg{max-width:100%}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="config.js"></script>
 <script>
-const APP_VERSION="2026-10-15.5";
+const APP_VERSION="2026-10-15.1";
 const TR=["ติวเข้ม","UpSkill"];
 const C=[
 ["คณิต",0,"8303","Applied Math Admission TCAS เล่ม 1",45],["คณิต",0,"8304","Applied Math Admission TCAS เล่ม 2",40],["คณิต",0,"8305","Applied Math Admission TCAS เล่ม 3",32],["คณิต",0,"8306","Applied Math Admission TCAS เล่ม 4",40],["คณิต",0,"8307","Applied Math Admission TCAS เล่ม 5",36],["คณิต",1,"8309","UpSkill คณิตศาสตร์ประยุกต์",54],
@@ -165,13 +165,22 @@ const fd=s=>s?D0(s).toLocaleDateString("th-TH",{day:"numeric",month:"short",year
 const LS="tcas-students-v1";
 const BATCHES=Array.from({length:11},(_,i)=>"DEK"+(71+i));
 let tab="comp",hv="all",sf="",editName=false,seenSet=false,STAFF=[],ME={id:"",owner:true,reg:true,name:"",joined:""},lastId=null,S=[],cur=null,db=null,readOnly=false,typing=false,q="",mode="local";
-const nm=s=>[s.first,s.last].filter(Boolean).join(" ")+(s.nick?` (\${s.nick})`:"");
+const nm=s=>[s.first,s.last].filter(Boolean).join(" ")+(s.nick?` (${s.nick})`:"");
 
 function blank(){const subj={};SUBJ.forEach(s=>subj[s]={on:false,t:[1,1],enr:TODAY,start:TODAY,end:"",ustart:"",uend:""});
   return{id:"s"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),first:"",last:"",nick:"",ondy:"",photo:"",phone:"",school:"",uni:"",faculty:"",batch:"DEK71",note:"",price:"",subj,w:{},wk:{},wp:{},hp:{},hw:{},hwk:{},hwp:{},cn:{},staffId:"",staffName:""}}
 function norm(s){const b=blank();s.subj=s.subj||{};SUBJ.forEach(k=>{s.subj[k]=Object.assign(b.subj[k],s.subj[k]||{});if(!Array.isArray(s.subj[k].t))s.subj[k].t=[1,1]});s.w=s.w||{};s.wk=s.wk||{};s.wp=s.wp||{};s.hp=s.hp||{};s.hw=s.hw||{};s.hwk=s.hwk||{};s.hwp=s.hwp||{};s.cn=s.cn||{};s.price=s.price||"";s.staffId=s.staffId||"";s.staffName=s.staffName||"";return s}
+function sample(){const s=blank();Object.assign(s,{first:"ตัวอย่าง",last:"ใจดี",nick:"ก้อง",ondy:"ONDY00000",phone:"08x-xxx-xxxx",school:"โรงเรียนตัวอย่างวิทยา",uni:"จุฬาลงกรณ์มหาวิทยาลัย",faculty:"แพทยศาสตร์",batch:"DEK71",note:"ข้อมูลตัวอย่าง ลบได้",price:"15000"});
+  SUBJ.forEach(k=>Object.assign(s.subj[k],{on:true,enr:addD(-14),start:addD(-10),end:"2027-02-28",ustart:addD(5),uend:"2027-03-15"}));
+  s.w={"8303":45,"1301":4,"3301":20,"2301":10};const m1=mon(addD(-10)),m2=mon(TODAY);s.wk={[m1]:{"คณิต":40,"เคมี":15,"ฟิสิกส์":4,"ชีววิทยา":8}};if(m2!==m1)s.wk[m2]={"คณิต":5,"เคมี":5,"ชีววิทยา":2};s.hp={"8281":{on:true,enr:addD(-30),mo:""},"8282":{on:true,enr:addD(-10),mo:""},"0281":{on:true,enr:addD(-215),mo:""},"P3005":{on:true,enr:addD(-60),mo:""}};s.hw={"8201":24,"8202":10,"0201":10,"P2011":20};s.hwk={[m1]:{"คณิต":20,"ฟิสิกส์":6,"English":4}};s.hwk[m2]=Object.assign(s.hwk[m2]||{},{"คณิต":3,"English":2});return s}
 
 const av=(st,z)=>`<span class="av" style="width:${z}px;height:${z}px;font-size:${Math.round(z*.42)}px">${st.photo?`<img src="${st.photo}" alt="รูป ${esc(st.nick||st.first)}">`:esc(Array.from(st.nick||st.first||"?")[0])}</span>`;
+function setPhoto(f){const st=S.find(x=>x.id===cur);if(!f||!st)return;if(!/^image\//.test(f.type)){toast("เลือกไฟล์รูปภาพเท่านั้น");return}
+  const r=new FileReader();r.onerror=()=>toast("อ่านไฟล์รูปไม่ได้");
+  r.onload=()=>{const im=new Image();im.onerror=()=>toast("เปิดรูปนี้ไม่ได้ ลองไฟล์ JPG หรือ PNG");
+    im.onload=()=>{const side=Math.min(im.width,im.height),o=Math.min(256,side),c=document.createElement("canvas");c.width=o;c.height=o;
+      c.getContext("2d").drawImage(im,(im.width-side)/2,(im.height-side)/2,side,side,0,0,o,o);st.photo=c.toDataURL("image/jpeg",.8);save(st,true);render();toast("อัปโหลดรูปแล้ว")};im.src=r.result};
+  r.readAsDataURL(f)}
 
 /* ม.ปลาย */
 const SE={"คณิต":"📐","ฟิสิกส์":"⚡","เคมี":"🧪","ชีววิทยา":"🧬","English":"🔤"};
@@ -221,62 +230,48 @@ function hwplan(st,s,w){const o=(st.hwp||{})[w];if(o&&o[s]!==undefined)return o[
 function hwtot(st,w){let a=0,p=0;hsubs(st).forEach(s=>{a+=hwact(st,s,w);p+=hwplan(st,s,w)});return{a,p}}
 function hsSum(st){const L=hsAll(st),o=L.filter(x=>!x.fin&&x.days!=null).sort((a,b)=>a.days-b.days)[0];
   return{n:L.length,total:L.reduce((n,x)=>n+x.total,0),done:L.reduce((n,x)=>n+x.done,0),near:o?{days:o.days,name:o.p.s}:null}}
+function hsTxt(st){const h=hsSum(st);if(!h.n)return"–";return`${h.n} แพ็ค · ${fh(h.done)}/${fh(h.total)} ชม. ${chip(hsAgg(st))}`+(h.near?`<div class="src">${h.near.days<0?"หมดอายุแล้ว "+(-h.near.days)+" วัน":"หมดอายุใน "+h.near.days+" วัน"} · ${esc(h.near.name)}</div>`:"")}
 
 /* 🔔 เช็คว่าน้องถึงวันที่ต้องติดตามประจำสัปดาห์หรือไม่ */
 function needsAlert(st) {
   const cw = mon(TODAY);
   const t = wtot(st, cw);
   const ht = hwtot(st, cw);
+  // ล่าช้ากว่าแผนประจำสัปดาห์ปัจจุบันเกิน 0.5 ชม.
   if ((t.p - t.a > 0.5) || (ht.p - ht.a > 0.5)) return true;
+  // หรือมีวิชาที่ใกล้หมดอายุใน 7 วัน
   const d = due(st);
   if (d && d.d <= 7) return true;
   return false;
 }
 
-function packCard(st, p) {
-  const x = hpInfo(st, p);
-  const r = (st.hp || {})[p.k] || {};
-  const termTag = p.term ? '<span class="chip wait">' + esc(p.term) + '</span>' : '';
-  const checkedAttr = x ? ' checked' : '';
-  const head = '<div class="cdh"><label style="cursor:pointer"><input type="checkbox" data-hp="' + p.k + '" data-k="on"' + checkedAttr + '> <b>' + esc(p.n) + '</b></label>' + termTag + '</div><div class="src">รหัส ' + p.k + ' · ' + fh(p.h) + ' ชม. · อายุคอร์ส ' + p.mo + ' เดือน</div>';
-  if (!x) return '<div class="cd">' + head + '</div>';
-  const cls = x.fin ? '' : (x.days == null ? '' : (x.days < 0 ? ' late' : (x.days <= 30 ? ' warn' : '')));
-  const tp = x.f == null ? 0 : Math.round(x.f * 100);
-  const hp = Math.round(x.done / x.total * 100);
-  const dTxt = x.fin ? 'ครบแล้ว' : (x.days == null ? '–' : (x.days < 0 ? ('เลย ' + (-x.days) + ' วัน') : (x.days + ' <small>วัน</small>')));
-  const pace = x.fin ? 'เรียนครบทุกเรื่องในแพ็คแล้ว' : (x.days == null ? 'ใส่วันที่สมัครเพื่อเริ่มนับถอยหลัง' : (x.days <= 0 ? ('หมดอายุแล้ว ยังเหลือ ' + fh(x.rem) + ' ชม.') : ('ต้องเรียนเฉลี่ย ' + fh(x.rem / (x.days / 7)) + ' ชม./สัปดาห์ (' + fh(x.rem / x.days) + ' ชม./วัน)')));
-  const dngClass = (x.days != null && x.days < 0 && !x.fin) ? ' class="dng"' : '';
-  const finChip = x.fin ? '<span class="chip ok">ครบแล้ว</span>' : chip(x);
-  const itemsHtml = p.it.map(function(i) {
-    const w = Math.min(i.h, (st.hw || {})[i.c] || 0);
-    const d = w >= i.h;
-    const itemDone = d ? ' done' : '';
-    const itemChecked = d ? ' checked' : '';
-    return '<div class="item' + itemDone + '"><input type="checkbox" id="h' + i.c + '" data-hc="' + i.c + '"' + itemChecked + '><label for="h' + i.c + '">' + i.c + ' ' + esc(i.n) + '</label><span class="m"><input class="w" type="number" min="0" max="' + i.h + '" step="0.5" value="' + fh(w) + '" data-hv="' + i.c + '" aria-label="ชั่วโมงที่เรียนแล้ว ' + esc(i.n) + '"> / ' + fh(i.h) + ' ชม.</span></div>';
-  }).join('');
-  return '<div class="cd' + cls + '">' + head +
-    '<div class="f" style="display:flex;gap:8px;margin-top:8px"><div style="flex:1"><label class="l" for="e' + p.k + '">วันที่สมัคร</label><input id="e' + p.k + '" type="date" data-hp="' + p.k + '" data-k="enr" value="' + esc(r.enr || "") + '"></div><div style="width:96px"><label class="l" for="m' + p.k + '">อายุ (เดือน)</label><input id="m' + p.k + '" type="number" min="1" max="36" data-hp="' + p.k + '" data-k="mo" value="' + (r.mo || "") + '" placeholder="' + p.mo + '"></div></div>' +
-    '<div class="f" style="display:flex;gap:8px;margin-top:6px"><div style="flex:1"><label class="l" for="s' + p.k + '">เริ่มเรียนตามแผน</label><input id="s' + p.k + '" type="date" data-hp="' + p.k + '" data-k="ps" value="' + esc(r.ps || "") + '"></div><div style="flex:1"><label class="l" for="d' + p.k + '">ต้องจบตามแผน</label><input id="d' + p.k + '" type="date" data-hp="' + p.k + '" data-k="pe" value="' + esc(r.pe || "") + '"></div></div>' +
-    '<div class="src">เว้นว่าง = เริ่มวันที่สมัคร และจบวันหมดอายุคอร์ส</div>' +
-    '<div class="cdr"><span>เหลือเวลา</span><b' + dngClass + '>' + dTxt + '</b></div>' +
-    '<div class="bar"><i style="width:' + tp + '%;background:var(--plan)"></i></div><div class="src">ใช้เวลาไปแล้ว ' + (x.f == null ? "–" : tp + "%") + ' · หมดอายุ ' + fd(x.exp) + '</div>' +
-    '<div class="cdr"><span>เหลือชั่วโมง</span><b>' + fh(x.rem) + ' <small>ชม.</small></b></div>' +
-    '<div class="bar"><i style="width:' + hp + '%"></i></div><div class="src">เรียนแล้ว ' + hp + '% · ' + fh(x.done) + '/' + fh(x.total) + ' ชม.</div>' +
-    '<div class="src" style="margin-top:6px"><b>' + pace + '</b></div>' +
-    '<div class="src">แผน ณ วันนี้ ' + fh(x.plan) + ' ชม. · ' + finChip + '</div>' +
-    '<details data-s="p' + p.k + '" style="margin-top:8px"><summary style="padding:6px 8px;font-size:.9rem"><span>รายการเรียน (' + p.it.length + ')</span><small>' + fh(x.done) + '/' + fh(x.total) + ' ชม.</small></summary><div class="tk">' + itemsHtml + '</div></details></div>';
-}
-
+function packCard(st,p){const x=hpInfo(st,p),r=(st.hp||{})[p.k]||{};
+  const head=`<div class="cdh"><label style="cursor:pointer"><input type="checkbox" data-hp="${p.k}" data-k="on"${x?" checked":""}> <b>${esc(p.n)}</b></label>${p.term?`<span class="chip wait">${p.term}</span>`:""}</div><div class="src">รหัส ${p.k} · ${fh(p.h)} ชม. · อายุคอร์ส ${p.mo} เดือน</div>`;
+  if(!x)return`<div class="cd">${head}</div>`;
+  const cls=x.fin?"":x.days==null?"":x.days<0?" late":x.days<=30?" warn":"",tp=x.f==null?0:Math.round(x.f*100),hp=Math.round(x.done/x.total*100);
+  const dTxt=x.fin?"ครบแล้ว":x.days==null?"–":x.days<0?`เลย ${-x.days} วัน`:`${x.days} <small>วัน</small>`;
+  const pace=x.fin?"เรียนครบทุกเรื่องในแพ็คแล้ว":x.days==null?"ใส่วันที่สมัครเพื่อเริ่มนับถอยหลัง":x.days<=0?`หมดอายุแล้ว ยังเหลือ ${fh(x.rem)} ชม.`:`ต้องเรียนเฉลี่ย ${fh(x.rem/(x.days/7))} ชม./สัปดาห์ (${fh(x.rem/x.days)} ชม./วัน)`;
+  return`<div class="cd${cls}">${head}
+  <div class="f" style="display:flex;gap:8px;margin-top:8px"><div style="flex:1"><label class="l" for="e${p.k}">วันที่สมัคร</label><input id="e${p.k}" type="date" data-hp="${p.k}" data-k="enr" value="${esc(r.enr||"")}"></div><div style="width:96px"><label class="l" for="m${p.k}">อายุ (เดือน)</label><input id="m${p.k}" type="number" min="1" max="36" data-hp="${p.k}" data-k="mo" value="${r.mo||""}" placeholder="${p.mo}"></div></div>
+  <div class="f" style="display:flex;gap:8px;margin-top:6px"><div style="flex:1"><label class="l" for="s${p.k}">เริ่มเรียนตามแผน</label><input id="s${p.k}" type="date" data-hp="${p.k}" data-k="ps" value="${esc(r.ps||"")}"></div><div style="flex:1"><label class="l" for="d${p.k}">ต้องจบตามแผน</label><input id="d${p.k}" type="date" data-hp="${p.k}" data-k="pe" value="${esc(r.pe||"")}"></div></div>
+  <div class="src">เว้นว่าง = เริ่มวันที่สมัคร และจบวันหมดอายุคอร์ส</div>
+  <div class="cdr"><span>เหลือเวลา</span><b${x.days!=null&&x.days<0&&!x.fin?' class="dng"':""}>${dTxt}</b></div>
+  <div class="bar"><i style="width:${tp}%;background:var(--plan)"></i></div><div class="src">ใช้เวลาไปแล้ว ${x.f==null?"–":tp+"%"} · หมดอายุ ${fd(x.exp)}</div>
+  <div class="cdr"><span>เหลือชั่วโมง</span><b>${fh(x.rem)} <small>ชม me.</small></b></div>
+  <div class="bar"><i style="width:${hp}%"></i></div><div class="src">เรียนแล้ว ${hp}% · ${fh(x.done)}/${fh(x.total)} ชม.</div>
+  <div class="src" style="margin-top:6px"><b>${pace}</b></div>
+  <div class="src">แผน ณ วันนี้ ${fh(x.plan)} ชม. · ${x.fin?'<span class="chip ok">ครบแล้ว</span>':chip(x)}</div>
+  <details data-s="p${p.k}"${OPEN.has("p"+p.k)?" open":""} style="margin-top:8px"><summary style="padding:6px 8px;font-size:.9rem"><span>รายการเรียน (${p.it.length})</span><small>${fh(x.done)}/${fh(x.total)} ชม.</small></summary><div class="tk">`+
+  p.it.map(i=>{const w=Math.min(i.h,(st.hw||{})[i.c]||0),d=w>=i.h;return`<div class="item${d?" done":""}"><input type="checkbox" id="h${i.c}" data-hc="${i.c}"${d?" checked":""}><label for="h${i.c}">${i.c} ${esc(i.n)}</label><span class="m"><input class="w" type="number" min="0" max="${i.h}" step="0.5" value="${fh(w)}" data-hv="${i.c}" aria-label="ชั่วโมงที่เรียนแล้ว ${esc(i.n)}"> / ${fh(i.h)} ชม.</span></div>`}).join("")+`</div></details></div>`}
 function hsChart(st){const el=$("hc0");if(!el)return;const S2=hsubs(st);if(!S2.length){el.innerHTML="";return}
   const A=S2.map(s=>hsAgg(st,s)),mx=Math.max(1,...A.map(a=>Math.max(a.plan,a.done,a.total)))*1.1;
   const W=Math.max(430,S2.length*104+40),H=240,Lf=38,B=44,T=12,ph=H-B-T,gw=(W-Lf)/S2.length,bw=Math.min(28,gw/3);
-  let o=`<svg viewBox="0 0 ${W}${H}" width="${W}" height="${H}" role="img" aria-label="กราฟแท่งเนื้อหา ม.ปลาย แผนเทียบเรียนจริงรายวิชา">`;
-  for(let i=0;i<=4;i++){const y=T+ph-ph*i/4;o+=`<line x1="${Lf}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="\${Lf-5}" y="${y+4}" font-size="11" text-anchor="end">${Math.round(mx*i/4)}</text>`}
+  let o=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="กราฟแท่งเนื้อหา ม.ปลาย แผนเทียบเรียนจริงรายวิชา">`;
+  for(let i=0;i<=4;i++){const y=T+ph-ph*i/4;o+=`<line x1="${Lf}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${Lf-5}" y="${y+4}" font-size="11" text-anchor="end">${Math.round(mx*i/4)}</text>`}
   S2.forEach((s,i)=>{const x=Lf+i*gw+gw/2;
-    [[A[i].plan,"var(--plan)",-bw-2],[A[i].done,"var(--accent)",2]].forEach(([v,c,dx])=>{const h=ph*v/mx;o+=`<rect x="\${x+dx}" y="${T+ph-h}" width="${bw}" height="${h}" rx="3" fill="${c}"/><text x="\${x+dx+bw/2}" y="${T+ph-h-4}" font-size="11" text-anchor="middle">${fh(v)}</text>`});
-    o+=`<text x="\${x}" y="${H-24}" font-size="12" text-anchor="middle">${s}</text><text x="\${x}" y="${H-9}" font-size="10" text-anchor="middle">ทั้งหมด ${fh(A[i].total)} ชม.</text>`});
+    [[A[i].plan,"var(--plan)",-bw-2],[A[i].done,"var(--accent)",2]].forEach(([v,c,dx])=>{const h=ph*v/mx;o+=`<rect x="${x+dx}" y="${T+ph-h}" width="${bw}" height="${h}" rx="3" fill="${c}"/><text x="${x+dx+bw/2}" y="${T+ph-h-4}" font-size="11" text-anchor="middle">${fh(v)}</text>`});
+    o+=`<text x="${x}" y="${H-24}" font-size="12" text-anchor="middle">${s}</text><text x="${x}" y="${H-9}" font-size="10" text-anchor="middle">ทั้งหมด ${fh(A[i].total)} ชม.</text>`});
   el.innerHTML=o+"</svg>"}
-
 function hsWeeklyHtml(st){
   const L=hweeks(st),E=hsubs(st),cw=mon(TODAY);if(!L.length||!E.length)return"";
   let sum=0;L.forEach(w=>sum+=hwtot(st,w).a);
@@ -284,7 +279,7 @@ function hsWeeklyHtml(st){
   return`<section class="panel"><h2>📅 ชั่วโมงเรียนรายสัปดาห์ (ม.ปลาย): แผน vs เรียนจริง</h2>
   <p class="sub" style="margin:-4px 0 8px">ช่อง "แผน" กำหนดชั่วโมงที่ต้องเรียนในสัปดาห์นั้น เว้นว่างไว้จะใช้ค่าเฉลี่ยอัตโนมัติ (ตัวเลขจางในช่อง) จากวันเริ่ม–วันจบตามแผนของแต่ละแพ็ค ส่วนช่อง "จริง" กรอกเมื่อน้องเรียนแล้ว (สัปดาห์จันทร์–อาทิตย์)</p>
   <div class="scroll" id="hcw"></div>
-  <div class="row f" style="align-items:flex-end;margin:10px 0"><div style="width:150px"><label class="l" for="hbs">ตั้งแผนทุกสัปดาห์ของวิชา</label><select id="hbs">\${E.map(x=>`<option>${x}</option>`).join("")}</select></div>
+  <div class="row f" style="align-items:flex-end;margin:10px 0"><div style="width:150px"><label class="l" for="hbs">ตั้งแผนทุกสัปดาห์ของวิชา</label><select id="hbs">${E.map(x=>`<option>${x}</option>`).join("")}</select></div>
   <div style="width:130px"><label class="l" for="hbh">ชั่วโมง/สัปดาห์</label><input id="hbh" type="number" min="0" max="168" step="0.5"></div>
   <button id="hbfill" class="act">ใช้กับทุกสัปดาห์ในช่วงเรียน</button><button id="hbclr" class="act">กลับเป็นค่าเฉลี่ยอัตโนมัติ</button></div>
   <div class="wkbox" id="hcwb"><table style="min-width:${300+E.length*150}px"><thead><tr><th>สัปดาห์</th>${E.map(x=>`<th>${x}<br><small>แผน / จริง (ชม.)</small></th>`).join("")}<th>รวมจริง</th><th>รวมแผน</th><th>สถานะ</th></tr></thead><tbody>`+
@@ -293,7 +288,6 @@ function hsWeeklyHtml(st){
     E.map((x,i)=>{const o=ov(w,x);return`<td><div style="display:flex;gap:4px">\${inp(`qp_${w}_${i}`,`data-hwp="${w}" data-ws="${x}"`,o===undefined?"":o,fh(hwauto(st,x,w)),`แผน ${x} สัปดาห์ ${fd(w)}`,o===undefined?"":"border-color:var(--accent)")}\${inp(`qa_${w}_${i}`,`data-hwk="${w}" data-ws="${x}"${fut?" disabled":""}`,hwact(st,x,w)||"","0",`จริง ${x} สัปดาห์ ${fd(w)}`)}</div></td>`}).join("")+
     `<td><b>\${fh(t.a)}</b></td><td>${fh(t.p)}</td><td>${fut?"–":wchip(t.a,t.p,isC)}</td></tr>`}).join("")+
   `</tbody></table></div><p class="src" style="margin:8px 0 0">รวมจากบันทึกรายสัปดาห์ \${fh(sum)} ชม. (ชุดนี้กรอกแยกจากการติ๊กรายการเรียนในแพ็ค) · กรอบสีฟ้าในช่องแผน = ผู้ดูแลกำหนดเอง</p></section>`}
-
 function hsHtml(st){
   const L=hsAll(st),a=hsAgg(st),pc=a.total?Math.round(a.done/a.total*100):0,g=a.done-a.plan,cw=mon(TODAY),tw=hwtot(st,cw);
   const near=L.filter(x=>!x.fin&&x.days!=null).sort((x,y)=>x.days-y.days)[0];
@@ -310,7 +304,6 @@ function hsHtml(st){
     L.map(x=>`<tr><td>\${SE[x.p.s]||""} ${esc(x.p.s)}${x.p.term?" · "+esc(x.p.term):""}<div class="src">${esc(x.p.n)}</div></td><td>${fh(x.plan)} / ${fh(x.done)} /${fh(x.total)}</td><td>${x.fin?'<span class="chip ok">ครบแล้ว</span>':chip(x)}</td><td>${x.fin||x.pdays==null?"–":x.pdays<0?`<span class="chip bad">เลย ${-x.pdays} วัน</span>`:x.pdays+" วัน"}</td><td>\${x.fin||x.days==null?"–":x.days<0?'<span class="chip bad">หมดอายุแล้ว</span>':x.days+" วัน"}</td></tr>`).join("")+`</tbody></table></div></section>`+hsWeeklyHtml(st):"";
   return`<div id="tab-hs"\${tab==="hs"?"":" hidden"}><p class="sub">ใช้ข้อมูลรายแพ็คจากโบรชัวร์เนื้อหา ม.ปลาย: ชั่วโมงคลิปจริง และอายุคอร์ส (นับจากวันที่สมัคร) ติ๊กแพ็คที่น้องสมัคร ใส่วันที่สมัคร แล้วกำหนดวันเริ่ม/วันจบตามแผนของแต่ละแพ็ค (เว้นว่าง = ใช้วันที่สมัครถึงวันหมดอายุคอร์ส) ถ้าน้องได้อายุคอร์สเพิ่ม (เช่น สมัครครบ 3 คอร์ส ได้ 12 เดือน) แก้ช่อง อายุ (เดือน) ได้</p>${stats}${dash}<h2>📦 แพ็คที่สมัคร และรายการเรียน</h2>`+
   SUBJ.map(s=>{const P=HP.filter(p=>p.s===s),n=P.filter(p=>hpInfo(st,p)).length;return`<section class="panel"><h2>${SE[s]\vert{}\vert{}"📘"} ${s} <small style="font-weight:400;color:var(--muted)">สมัครแล้ว ${n}/${P.length} แพ็ค</small></h2><div class="cds2">\${P.map(p=>packCard(st,p)).join("")}</div></section>`}).join("")+`</div>`}
-
 function hsPage(st){const L=hsAll(st);if(!L.length)return"";const h=hsSum(st),ag=hsAgg(st);
   const ft=`<div class="ft"><span>${esc(nm(st))} · ออกรายงาน ${fd(TODAY)}</span><span>หน้า {{n}}</span></div>`;
   return`<h1 style="font-size:18px">เนื้อหา ม.ปลาย: แพ็คที่สมัครและอายุคอร์ส</h1><div style="color:#5d6b82">${esc(nm(st))} · ออกรายงาน ${fd(TODAY)}</div>
@@ -320,6 +313,7 @@ function hsPage(st){const L=hsAll(st);if(!L.length)return"";const h=hsSum(st),ag
 
 /* staff */
 const clone=o=>JSON.parse(JSON.stringify(o));
+let SBY={},unsubs={},LEGACY=0,LEGACYSTAFF=0,creating=false;
 const sname=id=>{const m=STAFF.find(x=>x.id===id);return m?m.name:""};
 const sn=st=>st.staffId?(sname(st.staffId)||st.staffName||"(ไม่ทราบชื่อ)"):"ไม่ระบุพนักงาน";
 function canAdd(){return !readOnly&&(mode!=="shared"||ME.owner||ME.reg)}
@@ -336,7 +330,7 @@ function staffStats(){const g={};S.forEach(x=>{const k=x.staffId||"";(g[k]=g[k]|
 /* 🎯 หน้า Dashboard Card สำหรับ Sub user ในมุมมองของ Main user */
 function staffCards(){
   const T=staffStats(),can=MAXSUB===0||USERS.length<MAXSUB;
-  const form=`<div class="row f" style="align-items:flex-end;margin:0 0 8px"><div style="flex:1;min-width:200px"><label class="l" for="newsub">ชื่อ Sub user ใหม่</label><input id="newsub" maxlength="40" placeholder="เช่น พี่เอ"></div><button class="primary" id="addsub"\${can?"":" disabled"}>➕ เพิ่ม Sub user</button></div><p class="src" style="margin:0 0 12px">\${MAXSUB?"เพิ่มได้สูงสุด "+MAXSUB+" คน (ตอนนี้มี "+USERS.length+")":"เฉพาะ Main user เท่านั้นที่เพิ่ม Sub user ได้"}</p>`;
+  const form=`<div class="row f" style="align-items:flex-end;margin:0 0 8px"><div style="flex:1;min-width:200px"><label class="l" for="newsub">ชื่อ Sub user ใหม่</label><input id="newsub" maxlength="40" placeholder="เช่น พี่เอ"></div><button class="primary" id="addsub"\${can?"":" disabled"}>➕ เพิ่ม Sub user</button></div><p class="src" style="margin:0 0 12px">เฉพาะ Main user เท่านั้นที่เพิ่ม Sub user ได้ · \${MAXSUB?"เพิ่มได้สูงสุด "+MAXSUB+" คน (ตอนนี้มี "+USERS.length+")":"เมื่อเพิ่มแล้วระบบจะแสดงรหัสเข้าใช้ 1 ครั้ง ให้ส่งรหัสนั้นให้พนักงาน"}</p>`;
   
   const cards=T.filter(t=>t.id!=="main" && t.id!=="").map(t=>{
     const u=USERS.find(x=>x.id===t.id);
@@ -386,10 +380,9 @@ function staffField(st){if(mode!=="shared")return"";
     return`<div><label class="l" for="f_staffId">พนักงานผู้ดูแล</label><select id="f_staffId" data-f="staffId">\${o.map(x=>`<option value="${esc(x[0])}"${x[0]===(st.staffId||"")?" selected":""}>${esc(x[1])}</option>`).join("")}</select></div>`}
   return`<div><label class="l">พนักงานผู้ดูแล</label><div style="padding:7px 0">\${esc(sn(st))}</div></div>`}
 function noteHtml(st){if(canEdit(st))return"";return`<div class="note">\${readOnly?"คุณมีสิทธิ์ดูอย่างเดียว":(!ME.reg?"ใส่ชื่อของคุณก่อน จึงจะแก้ไขข้อมูลนักเรียนได้":"นักเรียนคนนี้อยู่ในความดูแลของ "+esc(sn(st))+" คุณแก้ไขไม่ได้")} แต่ยังดูข้อมูลและดาวน์โหลดรายงาน PDF ได้</div>`}
-
+function moveStudent(st,uid){const old=st.staffId||ME.id;if(!ME.owner||!uid||old===uid)return;st.staffId=uid;st.staffName=sname(uid);save(st,true)}
 function doPdf(st){if(!st)return;toast("กำลังสร้างไฟล์ PDF…");makePdf(st).then(b=>dlSave("รายงานความคืบหน้า-"+fname(st)+"-"+TODAY+".pdf",b)).catch(e=>toast("สร้าง PDF ไม่สำเร็จ: "+(e&&e.code||e&&e.message||"error")))}
 function visible(){let L=S;if(mode==="shared"&&hv==="mine")L=L.filter(x=>x.staffId===ME.id);if(sf!=="")L=L.filter(x=>(x.staffId||"")===(sf==="-"?"":sf));return L}
-
 /* storage */
 const timers={};
 function flash(t){$("msg").textContent=t;}
@@ -398,11 +391,12 @@ function toast(t){const el=$("toast");el.textContent=t;clearTimeout(tt);tt=setTi
 function modeText(){return ME.id?"เชื่อมต่อ Google Sheet แล้ว · บันทึกอัตโนมัติ"+(ME.owner?" · คุณเห็นข้อมูลของทุกคน":" · คุณเห็นเฉพาะนักเรียนของคุณ"):"ยังไม่ได้เข้าสู่ระบบ"}
 function updMsg(){flash(modeText()+(savedAt?" · บันทึกล่าสุด "+savedAt+" น.":""))}
 function stamp(){savedAt=new Date().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"});updMsg()}
-
+function localSave(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
 function save(st,now){clearTimeout(timers[st.id]);
   const go=async()=>{typing=false;PEND[st.id]=(PEND[st.id]||0)+1;try{await api("save",{s:clone(st)});stamp()}catch(e){fail(e,"บันทึกไม่สำเร็จ")}finally{PEND[st.id]--}};
   if(now)go();else timers[st.id]=setTimeout(go,600)}
 function removeS(id){S=S.filter(x=>x.id!==id);PEND[id]=(PEND[id]||0)+1;api("del",{id}).catch(e=>fail(e,"ลบไม่สำเร็จ")).finally(()=>{PEND[id]--})}
+function loadLocal(){try{S=(JSON.parse(localStorage.getItem(LS))||[]).map(norm)}catch(e){S=[]}}
 
 /* ===== เชื่อมต่อ Google Apps Script ===== */
 const API_URL="";
@@ -415,7 +409,7 @@ async function api(a,p){const url=apiUrl();if(!url)throw new Error("no api url")
   let j;try{j=await r.json()}catch(e){throw new Error("bad response")}
   if(!j.ok)throw new Error(j.error||"error");return j.data}
 const AUTHERR=/unauthorized|expired|disabled/;
-function errTxt(e){const m=String(e&&e.message||e);return m==="invalid"?"รหัสไม่ถูกต้อง":m==="locked"?"ลองผิดหลายครั้ง ระบบล็อกชั่วคราว รอ 10 นาที":m==="network"?"เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กดปุ่ม ทดสอบการเชื่อมต่อ ด้านล่างเพื่อตรวจ":m==="forbidden"?"ไม่มีสิทธิ์ทำรายการนี้":m==="limit"?"เพิ่ม Sub user ครบจำนวนที่กำหนดแล้ว":m}
+function errTxt(e){const m=String(e&&e.message||e);return m==="invalid"?"รหัสไม่ถูกต้อง":m==="locked"?"ลองผิดหลายครั้ง ระบบล็อกชั่วคราว รอ 10 นาที":m==="network"?"เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กดปุ่ม ทดสอบการเชื่อมต่อ ด้านล่างเพื่อตรวจ และดูคู่มือหัวข้อ แก้ปัญหา":m==="forbidden"?"ไม่มีสิทธิ์ทำรายการนี้":m==="limit"?"เพิ่ม Sub user ครบจำนวนที่กำหนดแล้ว":m}
 function fail(e,msg){if(AUTHERR.test(String(e&&e.message)))return logout("เซสชันหมดอายุ หรือบัญชีถูกปิดใช้งาน กรุณาเข้าสู่ระบบใหม่");toast((msg?msg+": ":"")+errTxt(e))}
 function showLogin(msg){$("login").hidden=false;try{$("ver").textContent="เวอร์ชัน v"+APP_VERSION}catch(e){}$("lerr").textContent=msg||"";$("urlbox").hidden=!!apiUrl();try{$("urlchg").hidden=!(apiUrl()&&!fixedUrl())}catch(e){}try{if(!$("apiurl").value)$("apiurl").value=apiUrl()}catch(e){}}
 function hideLogin(){$("login").hidden=true}
@@ -429,7 +423,9 @@ async function testConn(){const e=$("lerr");e.className="src";
   try{const r=await fetch(u,{redirect:"follow"}),t=await r.text();
     if(/"service"\s*:\s*"tcas-tracker"/.test(t)){e.className="src ok";e.textContent="✅ เชื่อมต่อระบบหลังบ้านได้แล้ว ใส่รหัสผู้ใช้แล้วกดเข้าสู่ระบบได้เลย";return}
     e.textContent="❌ ติดต่อ Google ได้ แต่ไม่ใช่ระบบหลังบ้านของเรา"}
-  catch(err){e.textContent="❌ หน้านี้ส่งคำขอออกไปหา Google ไม่ได้"}}
+  catch(err){e.textContent="กำลังตรวจเครือข่ายของเครื่องนี้…";
+    const reach=await probe(u),g=await probe("https://www.google.com/generate_204");
+    e.textContent="❌ หน้านี้ส่งคำขอออกไปหา Google ไม่ได้"}}
 async function doLogin(){const code=($("code").value||"").trim();
   if(!fixedUrl()){const u=cleanUrl($("apiurl").value);if(!u){$("lerr").className="src";$("lerr").textContent="Web app URL ไม่ถูกต้อง";return}try{$("apiurl").value=u;localStorage.setItem("tcas-api",u)}catch(e){}}
   if(!code){$("lerr").textContent="กรอกรหัสผู้ใช้";return}
@@ -437,7 +433,7 @@ async function doLogin(){const code=($("code").value||"").trim();
   try{const r=await api("login",{code});TOKEN=r.token;try{localStorage.setItem("tcas-token",TOKEN)}catch(e){}$("code").value="";await enter(r.me)}catch(e){$("lerr").textContent=errTxt(e);}}
 function logout(msg){TOKEN="";try{localStorage.removeItem("tcas-token")}catch(e){}clearInterval(pollT);S=[];USERS=[];STAFF=[];cur=null;SINCE=0;PEND={};ME={id:"",owner:false,reg:false,name:"",joined:""};render();showLogin(msg||"")}
 async function enter(m){ME={id:m.id,owner:m.role==="main",reg:true,name:m.name,joined:""};mode="shared";hv=ME.owner?"all":"mine";sf="";
-  STAFF=[{id:ME.id,name:ME.name,joined:""}];S=[];SINCE=0;PEND={};hideLogin();toast("กำลังโหลดข้อมูล…");
+  STAFF=[{id:ME.id,name:ME.name,joined:"",seen:""}];S=[];SINCE=0;PEND={};hideLogin();toast("กำลังโหลดข้อมูล…");
   try{await pull(true);if(ME.owner)await loadUsers()}catch(e){fail(e,"โหลดข้อมูลไม่สำเร็จ")}
   render();clearInterval(pollT);pollT=setInterval(poll,30000)}
 async function loadUsers(){const r=await api("users");USERS=r.users;MAXSUB=r.max||0;
@@ -501,6 +497,7 @@ function wtot(st,w){let a=0,p=0;SUBJ.forEach(s=>{if(!st.subj[s].on)return;a+=wac
 function wchip(a,p,isCur){if(p<.05&&a<.05)return'<span class="chip wait">–</span>';
   if(a>=p-.05)return`<span class="chip ok">\${a>p+.05?"เกินแผน +"+fh(a-p)+" ชม.":"ครบตามแผน"}</span>`;
   return isCur?`<span class="chip wait">ยังขาด \${fh(p-a)} ชม.</span>`:`<span class="chip bad">ขาด \${fh(p-a)} ชม.</span>`}
+function weekStat(st){const cw=mon(TODAY),t=wtot(st,cw);return`<div class="stat"><b>${fh(t.a)}/${fh(t.p)} ชม.</b><span>สัปดาห์นี้ (${fd(cw)} –${fd(addDays(cw,6))}) เรียนจริง / ตามแผน</span></div>`}
 
 function cdInfo(st,s,t){const p=st.subj[s],a=agg(st,s,t);if(!p.on||!a.n)return null;const d=tdates(p,t);
   return{s,t,p,d,a,rem:Math.max(0,a.total-a.done),days:d.end?Math.round((D0(d.end)-D0(TODAY))/864e5):null,fin:a.total-a.done<.05}}
@@ -594,7 +591,7 @@ function home(){
   // 🎯 Main user ดู Sub user เป็น Dashboard Card
   if(sh&&hv==="staff"&&ME.owner){$("home").innerHTML=head+`<section class="panel"><h2>🧑‍🏫 Dashboard รายบุคคล Sub user</h2>\${staffCards()}</section>`;return}
   
-  const fl=sf!==""?`<span class="chip wait">กรองพนักงาน: \${esc(sf==="-"?"ไม่ระบุ":sname(sf)||"ไม่ทราบชื่อ")} <button class="sm" data-sf="">ล้างตัวกรอง</button></span>`:"";
+  const fl=sf!==""?`<span class="chip wait">กรองพนักงาน: \${esc(sf==="-"?"ไม่ระบุ":sname(sf)||"(ไม่ทราบชื่อ)")} <button class="sm" data-sf="">ล้างตัวกรอง</button></span>`:"";
   $("home").innerHTML=head+`<div class="stats">
     <div class="stat hero"><b>${V.length}</b><span>นักเรียน${hv==="mine"&&sh?"ของฉัน":"ทั้งหมด"}</span></div>
     <div class="stat"><b style="color:var(--ok)">฿\${totalPriceSum.toLocaleString()}</b><span>สรุปยอดขายรวมทั้งแผน</span></div>
@@ -621,6 +618,7 @@ function table(){
 
 function detailHtml(st){
   const F=(k,l,type="text",ph="")=>`<div><label class="l" for="f_${k}">${l}</label><input id="f_${k}" type="${type}" data-f="${k}" value="${esc(st[k])}" placeholder="${ph}"${k==="batch"?' list="bl"':""}></div>`;
+  const a=agg(st,null,null),g=a.done-a.plan,pct=a.total?Math.round(a.done/a.total*100):0;
   
   let h=`<div class="tb"><button id="back">← กลับไปรายชื่อ</button><button id="pdf" class="primary">ดาวน์โหลดรายงาน PDF</button><button id="ttpdf">📅 ตารางแผน PDF</button><button id="ttjpg">🖼️ ตารางแผน JPG</button><button id="gsheet">📗 สร้าง Google Sheet ใน Drive ของฉัน</button><span style="flex:1"></span><button id="del" class="act">ลบนักเรียนคนนี้</button></div>
   <div class="nmc" style="margin-bottom:16px">${av(st,60)}<div><h1>${esc(nm(st))||"นักเรียนใหม่"}${needsAlert(st)?'<span class="alert-badge" style="font-size:0.9rem">🔔 สัปดาห์นี้ต้องได้รับการติดตาม</span>':''}</h1><p class="sub" style="margin:0">${esc(st.batch)}${st.faculty?" · "+esc(st.faculty):""}${st.uni?" · "+esc(st.uni):""}${mode==="shared"?" · ดูแลโดย "+esc(sn(st)):""}</p></div></div>
